@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全域樣式，讓畫面接近你原本的黑色介面 */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #111;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
