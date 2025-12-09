@@ -9,15 +9,16 @@ const Icons = {
   Sun: (p) => <Icon {...p} path="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />,
   Moon: (p) => <Icon {...p} path="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
   Cube: (p) => <Icon {...p} path="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />,
-  Box: (p) => <Icon {...p} path="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />, // Added missing Box
+  Box: (p) => <Icon {...p} path="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />,
   Eye: (p) => <Icon {...p} path="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 5c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z" />,
   Grid: (p) => <Icon {...p} path="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />,
   Layers: (p) => <Icon {...p} path="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />,
   Sliders: (p) => <Icon {...p} path="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
-  Armchair: (p) => <Icon {...p} path="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0ZM5 18v2M19 18v2" />, // Added missing Armchair
-  Monitor: (p) => <Icon {...p} path="M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3zm6 18h8m-4-4v4" />, // Added missing Monitor
-  Home: (p) => <Icon {...p} path="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />, // Added missing Home just in case
-  Tag: (p) => <Icon {...p} path="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" /> // Added missing Tag
+  Armchair: (p) => <Icon {...p} path="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0ZM5 18v2M19 18v2" />,
+  Monitor: (p) => <Icon {...p} path="M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3zm6 18h8m-4-4v4" />,
+  Home: (p) => <Icon {...p} path="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+  Tag: (p) => <Icon {...p} path="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" />,
+  Power: (p) => <Icon {...p} path="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10" />
 };
 
 // --- 2. Styles ---
@@ -25,12 +26,10 @@ const styles = `
   :root { --bg: #050505; --panel: rgba(18,18,18,0.95); --accent: #2563eb; --text: #e5e5e5; --border: rgba(255,255,255,0.1); }
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
   
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
-  /* Sliders */
   input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; cursor: pointer; }
   input[type=range]:focus { outline: none; }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #333; }
@@ -38,25 +37,31 @@ const styles = `
   input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); }
   .kelvin-track::-webkit-slider-runnable-track { background: linear-gradient(to right, #ff8a12 0%, #ffe3cd 50%, #cceeff 100%); height: 4px; border-radius: 2px; }
 
-  /* Layout */
   .app-container { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
-  .viewport { flex: 1; position: relative; }
+  .viewport { flex: 1; position: relative; background: #000; }
   
-  /* Sidebar */
   .sidebar { width: 300px; background: #0f0f0f; border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
   .sidebar-content { padding: 24px; overflow-y: auto; flex: 1; }
   
-  /* Components */
   .glass-panel { background: var(--panel); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
   .control-group { margin-bottom: 24px; }
   .group-header { font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #999; margin-bottom: 6px; }
   .val-text { color: #fff; font-family: 'SF Mono', monospace; font-size: 11px; }
 
-  .nav-dock { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 100px; padding: 4px; display: flex; gap: 4px; }
-  .nav-btn { padding: 8px 16px; border-radius: 100px; color: #888; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; }
-  .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-  .nav-btn.active { background: #fff; color: #000; }
+  .nav-dock { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 100px; padding: 4px; display: flex; gap: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+  .nav-btn { padding: 10px 20px; border-radius: 100px; color: #888; transition: all 0.3s; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; }
+  .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+  .nav-btn.active { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.3); transform: translateY(-2px); }
+  
+  .channel-card { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 8px; transition: border-color 0.2s; }
+  .channel-card:hover { border-color: #555; }
+  .channel-card.off { opacity: 0.5; }
+  .channel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .channel-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #eee; }
+  .power-btn { background: none; border: none; color: #444; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s; }
+  .power-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  .power-btn.active { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.5); }
 `;
 
 // --- 3. FIXTURE DEFINITIONS ---
@@ -90,12 +95,9 @@ const LAYOUT = {
       id: "K", name: "KITCHEN (207cm)", type: "kitchen",
       // Width 2.07. Depth 4.05.
       origin: [-3.13, 0], size: { w: 2.07, d: 4.05 }, 
-      doors: [{ pos: [1.035, -1.0], width: 0.9, rot: 90, type: "open" }], // To Living
+      doors: [{ pos: [1.035, -1.0], width: 0.9, rot: 90, type: "open" }],
       furniture: [
-        // L-Shape Kitchen (2.07 width is tight, L shape or I shape)
-        // Back wall 2.07m, Left wall 4.05m
         { id: "fk1", type: "kitchen_L", pos: [-0.05, 0, 0], size: [1.95, 0.9, 3.8], rot: 0 },
-        // Fridge at entrance
         { id: "fk2", type: "fridge", pos: [0.6, 0, -1.5], size: [0.7, 1.9, 0.7], rot: 0 },
       ],
       lights: [
@@ -110,32 +112,24 @@ const LAYOUT = {
       // Width 4.10. Depth 5.40.
       origin: [0, 0], size: { w: 4.10, d: 5.40 }, 
       doors: [
-        { pos: [-2.05, 1.5], width: 1.0, rot: 0, type: "open" }, // Entrance
+        { pos: [-2.05, 1.5], width: 1.0, rot: 0, type: "open" }, 
       ],
       furniture: [
-        // 4.1m width - Sofa (1m) - TV Unit (0.45m) = 2.65m clear.
-        // Sofa 2.1m (3-seater), not L-shape to save space, or small L.
-        // Placed on Right Wall (East)
         { id: "f1", type: "sofa_L", pos: [1.3, 0, 1.0], size: [2.1, 0.8, 1.6], rot: -90 },
-        // TV on Left Wall (West)
         { id: "f3", type: "tv_wall", pos: [-1.9, 0, 1.0], size: [0.3, 2.4, 2.0], rot: 0 },
-        // Coffee: Scaled down
-        { id: "f2", type: "coffee", pos: [-0.2, 0, 1.0], size: [1.0, 0.35, 0.6], rot: 0 },
-        { id: "rug1", type: "rug", pos: [-0.2, 0, 1.0], size: [2.4, 0.02, 2.0], rot: 0 },
-        // Dining Table (4 person) near entrance
-        { id: "f4", type: "dining", pos: [-0.8, 0, -1.5], size: [1.4, 0.75, 0.8], rot: 90 },
-        // Shoe Cabinet (Foyer Niche 146cm)
+        { id: "f2", type: "coffee", pos: [0.0, 0, 1.0], size: [1.0, 0.35, 0.6], rot: 0 },
+        { id: "rug1", type: "rug", pos: [0.0, 0, 1.0], size: [2.4, 0.02, 2.0], rot: 0 },
+        { id: "f4", type: "dining", pos: [-0.5, 0, -1.5], size: [1.4, 0.75, 0.8], rot: 90 },
         { id: "f5", type: "cabinet_side", pos: [-1.4, 0, 2.4], size: [1.2, 1.0, 0.4], rot: 0 },
       ],
       lights: [
-        // Track System: Z-axis spine
-        { code:"TRACK", type:"track_rail", pos: [0, 2.7, 0], len: 3.5, axis: "z" },
-        { code:"TRACK", type:"spot", pos: [0, 2.7, 1.0], target: [-0.2, 0.35, 1.0] }, // Coffee
-        { code:"TRACK", type:"spot", pos: [0, 2.7, -1.5], target: [-0.8, 0.75, -1.5] }, // Dining
-        { code:"TRACK", type:"spot", pos: [0, 2.7, 1.5], target: [1.3, 1.2, 1.5] }, // Sofa Art
-        { code:"PEND", type:"pendant", pos: [-0.8, 2.0, -1.5] },
-        { code:"STRIP", type:"linear", pos: [0, 2.65, 2.6], len: 4.0, axis: "x", dir: "down" }, // Curtain
-        { code:"DOWN", type:"down", pos: [1.2, 2.7, -2.0] }, // Circ
+        { code:"TRACK", type:"track_rail", pos: [0.5, 2.7, 0.5], len: 3.0, axis: "z" }, 
+        { code:"TRACK", type:"spot", pos: [0.5, 2.7, 1.5], target: [1.4, 0.8, 1.5] },
+        { code:"TRACK", type:"spot", pos: [0.5, 2.7, 0.5], target: [0, 0.35, 0.5] },
+        { code:"TRACK", type:"spot", pos: [0.5, 2.7, -1.5], target: [-0.8, 0.75, -1.5] }, 
+        { code:"PEND", type:"pendant", pos: [-0.5, 2.0, -1.5] },
+        { code:"STRIP", type:"linear", pos: [0, 2.65, 2.6], len: 4.0, axis: "x", dir: "down" },
+        { code:"DOWN", type:"down", pos: [-1.0, 2.7, -0.5] }, 
       ]
     },
     {
@@ -144,8 +138,7 @@ const LAYOUT = {
       origin: [3.375, -0.33], size: { w: 2.55, d: 4.74 }, 
       doors: [{ pos: [-1.275, 0.8], width: 0.9, rot: 0, type: "door" }],
       furniture: [
-        // Bed (Single)
-        { id: "fb3", type: "bed_single", pos: [0.6, 0, 1.0], size: [2.0, 0.5, 1.05], rot: -90 },
+        { id: "fb3", type: "bed_single", pos: [0.6, 0, 1.0], size: [1.9, 0.5, 1.05], rot: -90 },
         { id: "fd1", type: "desk", pos: [-0.6, 0, -1.5], size: [1.2, 0.75, 0.6], rot: 0 },
         { id: "fb4", type: "wardrobe", pos: [-0.8, 0, 1.8], size: [0.6, 2.6, 1.2], rot: 0 },
       ],
@@ -159,20 +152,18 @@ const LAYOUT = {
       id: "M1", name: "MASTER", type: "bedroom",
       // Far Right. Width 3.02. Depth 4.74.
       origin: [6.16, -0.33], size: { w: 3.02, d: 4.74 },
-      doors: [{ pos: [-1.51, 0.8], width: 0.9, rot: 0, type: "door" }],
+      doors: [{ pos: [-1.51, 1.0], width: 0.9, rot: 0, type: "door" }],
       furniture: [
-        // Bed (Queen) Head on Right Wall
-        { id: "fb1", type: "bed_queen", pos: [0.5, 0, 0.5], size: [2.0, 0.5, 1.6], rot: -90 },
-        { id: "ns1", type: "nightstand", pos: [0.5, 0, -0.5], size: [0.4, 0.5, 0.4], rot: 0 },
-        { id: "ns2", type: "nightstand", pos: [0.5, 0, 1.5], size: [0.4, 0.5, 0.4], rot: 0 },
-        // Wardrobe on Left Wall (Entrance side)
+        { id: "fb1", type: "bed_queen", pos: [0.6, 0, 0.5], size: [1.9, 0.5, 1.6], rot: -90 },
+        { id: "ns1", type: "nightstand", pos: [0.6, 0, -0.5], size: [0.4, 0.5, 0.4], rot: 0 },
+        { id: "ns2", type: "nightstand", pos: [0.6, 0, 1.5], size: [0.4, 0.5, 0.4], rot: 0 },
         { id: "fb2", type: "wardrobe", pos: [-1.2, 0, 0], size: [0.6, 2.6, 2.4], rot: 0 },
         { id: "rug2", type: "rug", pos: [-0.2, 0, 0.5], size: [2.0, 0.02, 2.4], rot: 0 },
       ],
       lights: [
         { code:"DOWN", type:"down", pos: [-0.5, 2.7, 0] },
-        { code:"STRIP", type:"linear", pos: [1.4, 2.65, 0], len: 4.5, axis: "z" }, // Curtain
-        { code:"TRACK", type:"track_rail", pos: [0.5, 2.7, 0.5], len: 1.6, axis: "z" }, // Reading
+        { code:"STRIP", type:"linear", pos: [1.4, 2.65, 0], len: 4.5, axis: "z" },
+        { code:"TRACK", type:"track_rail", pos: [0.5, 2.7, 0.5], len: 1.6, axis: "z" },
         { code:"TRACK", type:"spot", pos: [0.5, 2.7, -0.3], target: [0.5, 0.8, -0.5] },
         { code:"TRACK", type:"spot", pos: [0.5, 2.7, 1.3], target: [0.5, 0.8, 1.5] },
       ]
@@ -193,7 +184,7 @@ const LAYOUT = {
   ]
 };
 
-// --- 5. Procedural Texture Generator ---
+// --- 5. Texture Generation ---
 const generatePBRTextures = (type) => {
     const size = 1024;
     const canvas = document.createElement('canvas');
@@ -281,7 +272,7 @@ const VolumetricMaterial = (THREE, color) => {
 };
 
 // --- 7. 3D Engine ---
-const ThreeScene = ({ layers, cct, brightness, switches }) => {
+const ThreeScene = ({ layers, cct, brightness, fixtureControls }) => {
     const divRef = useRef(null);
     const rendererRef = useRef(null);
     const cameraRef = useRef(null);
@@ -444,24 +435,33 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
         const width = divRef.current.clientWidth;
         const height = divRef.current.clientHeight;
 
+        let frameId;
+
         const initEngine = async () => {
-            const loadScript = (src) => new Promise(r => {
-                if (document.querySelector(`script[src="${src}"]`)) { r(); return; }
-                const s = document.createElement('script');
-                s.src = src; s.onload = r; document.head.appendChild(s);
+            const loadScript = (src) => new Promise(resolve => {
+                 if (document.querySelector(`script[src="${src}"]`)) { 
+                     // Check if window.THREE is available, if so resolve immediately
+                     if (src.includes('three.min.js') && window.THREE) return resolve();
+                     if (src.includes('OrbitControls.js') && window.THREE && window.THREE.OrbitControls) return resolve();
+                     return resolve(); 
+                 }
+                 const s = document.createElement('script'); 
+                 s.src = src; 
+                 s.onload = resolve; 
+                 document.head.appendChild(s);
             });
 
-            if (!window.THREE) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
-            if (!window.THREE.OrbitControls) await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
+            await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
 
             const THREE = window.THREE;
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x080808);
-            scene.fog = new THREE.FogExp2(0x080808, 0.02);
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.FogExp2(0x0a0a0a, 0.02);
             sceneRef.current = scene;
 
             const cam = new THREE.PerspectiveCamera(40, width/height, 0.1, 100);
-            cam.position.set(20, 20, 20);
+            cam.position.set(0, 20, 15);
             cam.lookAt(0,0,0);
             cameraRef.current = cam;
 
@@ -484,20 +484,21 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                 controls.maxPolarAngle = Math.PI/2 - 0.1;
                 
                 const animate = () => {
-                    requestAnimationFrame(animate);
+                    frameId = requestAnimationFrame(animate);
                     controls.update();
                     
                     lightsRef.current.forEach(l => {
-                        l.currInt += (l.targetInt - l.currInt) * 0.08; 
-                        l.currCol.lerp(l.targetCol, 0.08); 
+                        l.currInt += (l.targetInt - l.currInt) * 0.1; // Smooth transition
+                        l.currCol.lerp(l.targetCol, 0.1); 
                         
+                        // FIX: Safety check for l.obj to prevent crash
                         if (l.obj) {
                             l.obj.intensity = l.currInt;
                             l.obj.color.copy(l.currCol);
                         }
-                        if (l.mat) { 
-                            l.mat.opacity = l.currInt * 0.05; 
-                            if(l.mat.emissive) l.mat.emissive.copy(l.currCol).multiplyScalar(l.currInt > 0 ? 1 : 0);
+                        // FIX: Safety check for l.mat (Emissive)
+                        if (l.mat && l.mat.emissive) { 
+                            l.mat.emissive.copy(l.currCol).multiplyScalar(l.currInt > 0 ? 1 : 0);
                         }
                     });
 
@@ -549,15 +550,19 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
             }
         };
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (frameId) cancelAnimationFrame(frameId);
+        };
     }, []);
 
-    // Light Management
+    // Light Management Loop - Reacts to fixtureControls changes
     useEffect(() => {
         if(status !== "ready") return;
         const THREE = window.THREE;
         const scene = sceneRef.current;
 
+        // One-time build of lights if needed (or if layout changed, but layout is static here)
         if (lightsRef.current.length === 0) {
             const lightGrp = new THREE.Group();
             
@@ -565,12 +570,14 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                 if(r.lights) {
                     const rx = r.origin[0]; const rz = r.origin[1];
                     r.lights.forEach(l => {
-                        const spec = FIXTURES[l.code];
+                        const spec = FIXTURES[l.code]; // e.g. TRACK, DOWN, PEND, STRIP
                         if(!spec) return;
 
+                        // Fixture Body Material
                         const matBody = new THREE.MeshStandardMaterial({color: spec.color, roughness: 0.4});
                         const matEmit = new THREE.MeshStandardMaterial({color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1}); 
                         
+                        // Create Geometry
                         if (l.type === 'track_rail') {
                             const len = l.len || 2;
                             const rail = new THREE.Mesh(new THREE.BoxGeometry(l.axis==='x'?len:spec.size[0], 0.04, l.axis==='z'?len:spec.size[0]), matBody);
@@ -581,12 +588,15 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                             const strip = new THREE.Mesh(new THREE.BoxGeometry(l.axis==='x'?len:0.02, 0.02, l.axis==='z'?len:0.02), matEmit);
                             strip.position.set(rx + l.pos[0], l.pos[1], rz + l.pos[2]);
                             lightGrp.add(strip);
+                            // Push ref for strip emitter glow
                             lightsRef.current.push({ 
-                                obj: null, mat: matEmit, spec, r, l, 
+                                obj: null, mat: matEmit, 
+                                code: l.code, // Identify as STRIP
                                 currInt: 0, targetInt: 0, 
                                 currCol: new THREE.Color(0), targetCol: new THREE.Color(0) 
                             });
                         } else {
+                            // Spot/Pendant Body
                             const h = l.type==='pendant' ? 0.3 : 0.05;
                             const body = new THREE.Mesh(new THREE.CylinderGeometry(spec.size[0], spec.size[0]*0.8, h, 16), matBody);
                             body.position.set(rx + l.pos[0], l.pos[1], rz + l.pos[2]);
@@ -598,6 +608,7 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                             }
                         }
 
+                        // Create Lights
                         if (l.type === 'linear') {
                             const count = Math.ceil(l.len) + 1;
                             for(let i=0; i<count; i++) {
@@ -607,10 +618,11 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                                 const off = (t-0.5)*l.len;
                                 p.position.set(rx + l.pos[0] + (l.axis==='x'?off:0), l.pos[1]-0.1, rz + l.pos[2] + (l.axis==='z'?off:0));
                                 lightGrp.add(p);
-                                lightsRef.current.push({ obj: p, spec, r, l, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
+                                lightsRef.current.push({ obj: p, code: l.code, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
                             }
                         } else if (l.type !== 'track_rail') {
-                            const isSpot = l.code === 'TRACK' || l.code === 'PEND';
+                            // Spot / Down / Pend
+                            const isSpot = l.code === 'TRACK' || l.code === 'PEND'; // Pendants behave like spots here
                             const source = isSpot ? new THREE.SpotLight(0xffffff, 0) : new THREE.PointLight(0xffffff, 0, 7);
                             source.position.set(rx + l.pos[0], l.pos[1]-0.05, rz + l.pos[2]);
                             source.decay = 2;
@@ -635,9 +647,9 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
                                 beam.rotateX(-Math.PI/2);
                                 lightGrp.add(beam);
                                 
-                                lightsRef.current.push({ obj: source, mat: beamMat, spec, r, l, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
+                                lightsRef.current.push({ obj: source, mat: beamMat, code: l.code, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
                             } else {
-                                lightsRef.current.push({ obj: source, spec, r, l, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
+                                lightsRef.current.push({ obj: source, code: l.code, currInt: 0, targetInt: 0, currCol: new THREE.Color(0), targetCol: new THREE.Color(0) });
                             }
                             lightGrp.add(source);
                         }
@@ -647,22 +659,29 @@ const ThreeScene = ({ layers, cct, brightness, switches }) => {
             scene.add(lightGrp);
         }
 
+        // Calculation Loop: Determine Target Intensity based on Controls
         const colorHex = getHex(cct);
         const targetColor = new THREE.Color(colorHex);
 
         lightsRef.current.forEach(item => {
-            const { spec, r, l } = item;
-            const switchName = `${r.id}_${spec.category}`;
-            const isOn = switches[switchName] !== false;
-            const layerInt = layers[spec.layer] || 1;
+            const spec = FIXTURES[item.code]; // item.code is TRACK, DOWN, etc.
+            const ctrl = fixtureControls[item.code]; // { on: bool, dim: 0-1 }
+            
+            // Logic: Master Dim * Scene Layer * Channel Dimmer * Channel Switch
             const masterInt = brightness / 100;
-            item.targetInt = isOn ? (spec.lumen * 0.015) * layerInt * masterInt : 0;
+            const layerInt = layers[spec.layer] || 1; 
+            const channelDim = ctrl.dim;
+            const channelOn = ctrl.on ? 1 : 0;
+
+            const finalIntensity = (spec.lumen * 0.015) * masterInt * layerInt * channelDim * channelOn;
+
+            item.targetInt = finalIntensity;
             item.targetCol.copy(targetColor);
         });
 
-    }, [layers, cct, brightness, switches, status]);
+    }, [layers, cct, brightness, fixtureControls, status]);
 
-    return <div ref={divRef} className="w-full h-full" />;
+    return <div ref={divRef} className="viewport" style={{width:'100%', height:'100%'}} />;
 };
 
 // --- Main App ---
@@ -672,17 +691,12 @@ const App = () => {
     const [bri, setBri] = useState(100);
     const [layers, setLayers] = useState(SCENES.daily.layers);
     
-    const [switches, setSwitches] = useState(() => {
-        const sw = {};
-        LAYOUT.rooms.forEach(r => {
-            if(r.lights) {
-                r.lights.forEach(l => {
-                    const spec = FIXTURES[l.code];
-                    if(spec) sw[`${r.id}_${spec.category}`] = true;
-                });
-            }
-        });
-        return sw;
+    // New State: Individual Fixture Controls
+    const [fixtureControls, setFixtureControls] = useState({
+        TRACK: { on: true, dim: 1.0 },
+        DOWN:  { on: true, dim: 1.0 },
+        PEND:  { on: true, dim: 1.0 },
+        STRIP: { on: true, dim: 1.0 }
     });
 
     const applyScene = (key) => {
@@ -690,29 +704,46 @@ const App = () => {
         setActiveSceneId(key);
         setLayers({...s.layers});
         setCct(s.cct);
-        setBri(100);
+        // We generally keep fixture overrides as is, or reset them? 
+        // Let's reset them to full on for the new scene to take full effect
+        setFixtureControls({
+            TRACK: { on: true, dim: 1.0 },
+            DOWN:  { on: true, dim: 1.0 },
+            PEND:  { on: true, dim: 1.0 },
+            STRIP: { on: true, dim: 1.0 }
+        });
     };
 
-    const toggleSwitch = (key) => {
-        setSwitches(prev => ({...prev, [key]: !prev[key]}));
+    const toggleFixture = (code) => {
+        setFixtureControls(prev => ({
+            ...prev,
+            [code]: { ...prev[code], on: !prev[code].on }
+        }));
+    };
+
+    const dimFixture = (code, val) => {
+        setFixtureControls(prev => ({
+            ...prev,
+            [code]: { ...prev[code], dim: val }
+        }));
     };
 
     return (
         <div className="app-container">
             <style>{styles}</style>
             <div className="viewport">
-                <ThreeScene layers={layers} cct={cct} brightness={bri} switches={switches} />
+                <ThreeScene layers={layers} cct={cct} brightness={bri} fixtureControls={fixtureControls} />
                 <div className="hud">
                     <div className="hud-panel">
                          <div className="hud-title">
                              <h1>GEMINI TWIN</h1>
-                             <p>V22.0 • SOLID GEOMETRY</p>
+                             <p>V23.2 • PRO LIGHTING CONSOLE</p>
                          </div>
                     </div>
                 </div>
                 <div className="nav-dock">
                     {Object.entries(SCENES).map(([k, s]) => (
-                        <button key={k} onClick={() => { setLayers(s.layers); setCct(s.cct); }} className="nav-btn">
+                        <button key={k} onClick={() => applyScene(k)} className={`nav-btn ${activeSceneId === k ? 'active' : ''}`}>
                             <s.icon size={16}/> {s.label}
                         </button>
                     ))}
@@ -721,24 +752,55 @@ const App = () => {
             
             <div className="sidebar">
                 <div className="sidebar-content">
+                    {/* 1. Global */}
                     <div className="control-group">
-                        <div className="group-header"><Icons.Sliders/> ATMOSPHERE</div>
+                        <div className="group-header"><Icons.Sliders/> GLOBAL SETTINGS</div>
                         <div className="slider-row">
-                            <div className="slider-label"><span>CCT</span><span className="slider-val">{cct}K</span></div>
+                            <div className="slider-label"><span>CCT</span><span className="val-text">{cct}K</span></div>
                             <input className="kelvin-track" type="range" min="2700" max="6500" value={cct} onChange={e=>setCct(Number(e.target.value))} />
                         </div>
                         <div className="slider-row">
-                            <div className="slider-label"><span>DIM</span><span className="slider-val">{bri}%</span></div>
+                            <div className="slider-label"><span>MASTER DIM</span><span className="val-text">{bri}%</span></div>
                             <input type="range" min="0" max="100" value={bri} onChange={e=>setBri(Number(e.target.value))} />
                         </div>
                     </div>
                     
+                    {/* 2. Fixture Channels (The new request) */}
                     <div className="control-group">
-                        <div className="group-header"><Icons.Layers/> CHANNELS</div>
+                        <div className="group-header"><Icons.Grid/> FIXTURE CHANNELS</div>
+                        {Object.entries(fixtureControls).map(([code, ctrl]) => {
+                            const spec = FIXTURES[code];
+                            return (
+                                <div key={code} className={`channel-card ${!ctrl.on ? 'off' : ''}`}>
+                                    <div className="channel-header">
+                                        <div className="channel-title">
+                                            {/* Simple visual indicator of type */}
+                                            <div style={{width: 8, height: 8, borderRadius: '50%', background: ctrl.on ? '#10b981' : '#444'}}></div>
+                                            {spec.name}
+                                        </div>
+                                        <button className={`power-btn ${ctrl.on ? 'active' : ''}`} onClick={() => toggleFixture(code)}>
+                                            <Icons.Power size={16} />
+                                        </button>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="0" max="1" step="0.01" 
+                                        value={ctrl.dim} 
+                                        onChange={(e) => dimFixture(code, parseFloat(e.target.value))}
+                                        disabled={!ctrl.on}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* 3. Layers (Secondary) */}
+                    <div className="control-group" style={{opacity: 0.5}}>
+                        <div className="group-header"><Icons.Layers/> SCENE LAYERS (AUTO)</div>
                         {Object.entries(layers).map(([k,v])=>(
-                            <div className="slider-row" key={k}>
+                            <div className="slider-row" key={k} style={{marginBottom:4}}>
                                 <div className="slider-label"><span style={{textTransform:'capitalize'}}>{k}</span><span className="slider-val">{Math.round(v*100)}%</span></div>
-                                <input type="range" min="0" max="1" step="0.1" value={v} onChange={e=>setLayers(prev=>({...prev, [k]:Number(e.target.value)}))} />
+                                <input type="range" min="0" max="1" step="0.1" value={v} disabled />
                             </div>
                         ))}
                     </div>
