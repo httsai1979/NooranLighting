@@ -51,8 +51,8 @@ const styles = `
 
   .nav-dock { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 100px; padding: 4px; display: flex; gap: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
   .nav-btn { padding: 10px 20px; border-radius: 100px; color: #888; transition: all 0.3s; display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; }
-  .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); transform: translateY(-2px); }
-  .nav-btn.active { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.3); transform: translateY(-2px); }
+  .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .nav-btn.active { background: #fff; color: #000; }
   
   .channel-card { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px; margin-bottom: 8px; transition: border-color 0.2s; }
   .channel-card:hover { border-color: #555; }
@@ -162,8 +162,8 @@ const LAYOUT = {
       ],
       lights: [
         { code:"DOWN", type:"down", pos: [-0.5, 2.7, 0] },
-        { code:"STRIP", type:"linear", pos: [1.4, 2.65, 0], len: 4.5, axis: "z" },
-        { code:"TRACK", type:"track_rail", pos: [0.5, 2.7, 0.5], len: 1.6, axis: "z" },
+        { code:"STRIP", type:"linear", pos: [1.4, 2.65, 0], len: 4.5, axis: "z" }, // Curtain
+        { code:"TRACK", type:"track_rail", pos: [0.5, 2.7, 0.5], len: 1.6, axis: "z" }, // Reading
         { code:"TRACK", type:"spot", pos: [0.5, 2.7, -0.3], target: [0.5, 0.8, -0.5] },
         { code:"TRACK", type:"spot", pos: [0.5, 2.7, 1.3], target: [0.5, 0.8, 1.5] },
       ]
@@ -737,7 +737,7 @@ const App = () => {
                     <div className="hud-panel">
                          <div className="hud-title">
                              <h1>GEMINI TWIN</h1>
-                             <p>V23.2 • PRO LIGHTING CONSOLE</p>
+                             <p>V24.1 • PRO LIGHTING CONSOLE</p>
                          </div>
                     </div>
                 </div>
