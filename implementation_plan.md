@@ -52,17 +52,37 @@ interface Product {
     - Accent: Gold (`#D4AF37`) - Highlighting premium status.
     - Background: Clean White (`#ffffff`) for readability, Light Grey (`#f5f5f5`) for sections.
 - **Typography**: Clean Sans-Serif (e.g., Inter or Vazirmatn for Persian support).
-- **Interactions**: Smooth page transitions, hover effects on product cards.
+- **Interactions**: Smooth## 24-Hour Launch Plan (Urgent) / 24小時上線計畫
 
-## 5. Implementation Steps
-1.  **Setup**: Initialize Next.js project, install dependencies.
-2.  **Foundation**: Configure Tailwind, Fonts, and Layout (Navbar, Footer).
-3.  **Data Layer**: Create `products.ts` with sample real data.
-4.  **Components**:
-    - `ProductCard`: Elegant display of product info.
-    - `FilterSidebar`: For narrowing down selection.
-    - `HeroSection`: Impactful visual introduction.
-5.  **Pages Development**:
+### Target / 目標
+- **Launch Time**: Within 24 hours. / 24小時內上線
+- **Primary Interface**: Mobile-First (PWA ready). / 手機優先
+- **Content**: Full product catalog, 100% spec accuracy, SEO optimized. / 完整產品錄，規格準確，SEO優化
+- **Features**: Product Browsing, Filtering, Search, Detailed Specs, Contact/Inquiry.
+
+### Immediate Tasks / 立即任務
+1.  **Asset Structure Setup** [Done]: Create folders for Images, Videos, Datasheets, Logos.
+2.  **Data Population**:
+    - Build comprehensive `products.js` reflecting `nooranlighting.com` categories (Indoor/Outdoor hierarchies).
+    - Implement rigorous metadata (SEO titles, descriptions) for every product.
+3.  **Mobile UI Optimization**:
+    - Enhance `ProductList` for mobile touch (sticky filters or drawer).
+    - Enhance `ProductDetail` for mobile readability and media display.
+4.  **SEO Integration**:
+    - Add `react-helmet-async`.
+    - Inject dynamic meta tags based on product data.
+5.  **User Content Guide**:
+    - Provide clear instructions on mapping file names to product codes.
+
+### Asset Locations / 檔案位置
+- **Images**: `public/assets/images/products/` (Format: `[ProductCode].jpg`)
+- **Videos**: `public/assets/videos/`
+- **Datasheets**: `public/assets/datasheets/`
+- **Logos**: `public/assets/logos/`
+
+---
+## Previous Plan (Reference)
+t**:
     - Build Home.
     - Build Shop (PLP).
     - Build Product Detail (PDP).
