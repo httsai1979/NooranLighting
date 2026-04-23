@@ -210,10 +210,16 @@ const canProceed = computed(() => {
         </div>
       </div>
 
-      <div class="pt-8 border-t border-zinc-200">
-        <a href="#" class="text-[11px] text-[#f27b21] font-bold flex items-center gap-2 hover:underline">
-          <HelpCircle size="14" /> Do you need help?
-        </a>
+      <!-- Stepper Footer -->
+      <div class="p-10 border-t border-zinc-200 mt-auto bg-white/50">
+        <div class="flex flex-col gap-6">
+          <a href="https://www.acofusion.com" target="_blank" class="text-[11px] text-zinc-900 font-black flex items-center gap-3 hover:text-[#f27b21] transition-colors uppercase tracking-widest">
+            <Info size="14" /> www.acofusion.com
+          </a>
+          <a href="mailto:james@acofusion.com" class="text-[11px] text-zinc-400 font-bold flex items-center gap-3 hover:text-zinc-900 transition-colors lowercase tracking-normal">
+            james@acofusion.com
+          </a>
+        </div>
       </div>
     </aside>
 
