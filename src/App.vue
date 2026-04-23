@@ -165,44 +165,89 @@ const generatedBOM = computed<BOMItem[]>(() => {
   const { mounting, layout, totalLength, selectedLuminaires } = config.value
   let items: BOMItem[] = []
 
+  // 1. Prefix Detection (Strict Mapping)
   let prefix = 'G-TL-A'; 
   if (mounting === 'Embedded concealed') prefix = 'G-TL-D-B';
   else if (mounting === 'Batch ash track') prefix = 'G-TL-D-C';
   else if (mounting === 'Spring fixed') prefix = 'G-TL-D-D';
   else if (mounting === 'Ceiling soft film') prefix = 'G-TL-D-E';
 
-  // 1. Tracks (2M Units)
+  // 2. Track & Basic Hardware
   const trackQty = Math.ceil(totalLength / 2000);
-  items.push(findRealItem([prefix, '2M'], `${mounting} Track (2M)`, 'Track', trackQty));
+  items.push(findRealItem([prefix, '2M'], `${mounting} Track (2M Engineering Unit)`, 'Tracks', trackQty));
+  items.push(findRealItem([prefix, 'END'], 'System End Cap Module', 'Hardware', 2));
 
-  // 2. Luminaires
+  // 3. Topology Logic (Corners & Connectors)
+  let cornerCount = 0;
+  if (layout === 'L-Shape') cornerCount = 1;
+  else if (layout === 'T-Shape') cornerCount = 1;
+  else if (layout === 'Rectangle') cornerCount = 4;
+
+  if (cornerCount > 0) {
+    items.push(findRealItem([prefix, 'CORNER'], '90° Structural Corner Module', 'Hardware', cornerCount));
+  }
+
+  // 4. Polarity Protection (Safety Protocol)
+  if (layout === 'T-Shape' || layout === 'Rectangle') {
+    items.push(findRealItem(['POLARITY', prefix.split('-')[2]], 'S10 Polarity Alignment Module', 'Technical', 1));
+  }
+
+  // 5. Mounting Hardware (Engineered Load)
+  if (mounting === 'Surface/Hanging') {
+    // If surface, add fixing clips every 1000mm
+    const clipQty = Math.max(2, Math.ceil(totalLength / 1000) * 2);
+    items.push(findRealItem(['FIXING', 'CLIP'], 'Heavy Duty Fixing Clip', 'Hardware', clipQty));
+  } else if (mounting.includes('Hanging') || mounting.includes('Pendant')) {
+    // If hanging, add suspension kits every 1.5m + at corners
+    const kitQty = Math.ceil(totalLength / 1500) + cornerCount;
+    items.push(findRealItem(['SUSPENSION', 'KIT'], 'Architectural Suspension Wire Kit', 'Hardware', kitQty));
+  }
+
+  // 6. Luminaires
   selectedLuminaires.forEach(sel => {
     items.push({
       model: sel.item.model,
-      category: sel.item.category,
-      description: 'Magnetic Architectural Module',
+      category: 'Luminaires',
+      description: 'S10 High-Precision Magnetic Module',
       quantity: sel.quantity,
       price: sel.item.price,
       photo: fixDriveUrl(sel.item.photo)
     });
   });
 
-  // 3. Power Hub
+  // 7. Power Protocol
   const totalW = selectedLuminaires.reduce((acc, s) => acc + (s.item.power * s.quantity), 0);
-  const psuQty = Math.ceil(totalW / PSU_MAX_W) || 1;
-  items.push(findRealItem(['G-TL-POW', '100W'], '48V DC Power Integration Hub', 'Power', psuQty));
-
-  // 4. Caps & Joiners
-  items.push(findRealItem([prefix, 'END'], 'System End Cap Unit', 'Hardware', 2));
-  if (layout === 'L-Shape') items.push(findRealItem([prefix, 'CORNER'], '90° Structural Joiner', 'Hardware', 1));
-  if (layout === 'T-Shape') items.push(findRealItem([prefix, 'T-JOIN'], 'T-Intersection Module', 'Hardware', 1));
+  // N+1 Safety Capacity
+  const safetyW = totalW * 1.2; 
+  const psuQty = Math.ceil(safetyW / PSU_MAX_W) || 1;
+  items.push(findRealItem(['G-TL-POW', '100W'], '48V DC Precision Power Hub', 'Power Supply', psuQty));
 
   return items;
 });
 
+
+const groupedBOM = computed(() => {
+  const groups: Record<string, BOMItem[]> = {
+    'Tracks': [],
+    'Luminaires': [],
+    'Power Protocol': [],
+    'Hardware & Technical': []
+  };
+
+  generatedBOM.value.forEach(item => {
+    if (item.category === 'Tracks') groups['Tracks'].push(item);
+    else if (item.category === 'Luminaires') groups['Luminaires'].push(item);
+    else if (item.category === 'Power Supply' || item.category === 'Power') groups['Power Protocol'].push(item);
+    else groups['Hardware & Technical'].push(item);
+  });
+
+  return Object.entries(groups).filter(([_, items]) => items.length > 0);
+});
+
 const totalPrice = computed(() => generatedBOM.value.reduce((acc, item) => acc + (item.price * item.quantity), 0));
 const currentLoad = computed(() => config.value.selectedLuminaires.reduce((acc, s) => acc + (s.item.power * s.quantity), 0));
-const isOverloaded = computed(() => currentLoad.value > PSU_MAX_W);
+const isOverloaded = computed(() => (currentLoad.value * 1.2) > PSU_MAX_W);
+
 
 // --- Navigation ---
 const navigate = (view: string) => {
@@ -232,8 +277,9 @@ const steps = [
   { id: 'topology', name: 'Topology', desc: 'Select structural layout' },
   { id: 'length', name: 'System Metres', desc: 'Linear extension scale' },
   { id: 'luminaires', name: 'Luminaires', desc: 'Optical module selection' },
-  { id: 'final', name: 'Parts List', desc: 'Review & Quotation' }
+  { id: 'final', name: 'Proposal', desc: 'Technical Bill of Materials' }
 ]
+
 </script>
 
 <template>
@@ -333,9 +379,10 @@ const steps = [
              <div class="grid grid-cols-1 lg:grid-cols-2 gap-32 items-start text-slate-600 text-lg leading-relaxed">
                 <div class="space-y-12">
                    <p class="text-3xl font-light text-slate-500 leading-relaxed italic font-serif">"Light is the fourth dimension of architecture."</p>
-                   <p>Based in the UK, ACOfusion specializes in low-voltage magnetic track protocols. Under the technical directorship of James Tsai, we serve global architectural firms with localized engineering support and patent-led innovations.</p>
-                   <p>Our focus is the intersection of high-density electronics and minimalist aesthetic integration.</p>
+                   <p>Based in the United Kingdom, ACOfusion specialises in high-density low-voltage magnetic track protocols. Under the technical directorship of James Tsai, we serve global architectural practices with tailored engineering support and patent-led innovations.</p>
+                   <p>Our methodology focuses on the systemic intersection of high-precision electronics and discrete minimalist integration, ensuring that illumination respects structural integrity.</p>
                 </div>
+
                 <div class="grid grid-cols-2 gap-8">
                    <div v-for="i in 4" :key="i" class="aspect-square bg-slate-50 rounded-[3rem] p-12 flex flex-col justify-end group hover:bg-[#2563eb] transition-all duration-700">
                       <span class="text-4xl font-black italic font-serif mb-4 group-hover:text-white">{{ ['UK', 'S10', '48V', 'A++'][i-1] }}</span>
@@ -420,15 +467,21 @@ const steps = [
                 <p class="text-3xl font-light text-slate-500">Engineering data and architectural library.</p>
              </header>
              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                <div v-for="i in 6" :key="i" class="bg-white p-12 rounded-[4rem] border border-slate-50 shadow-sm hover:shadow-2xl transition-all group cursor-pointer">
+                <div v-for="item in [
+                   {t:'S10 Series Catalog v2.9', d:'Complete technical specification for the 10mm magnetic ecosystem.'},
+                   {t:'Installation Protocol', d:'Step-by-step structural integration for recessed and surface variants.'},
+                   {t:'DIALux Engineering Plug-in', d:'Photometric data for advanced lighting simulation and calculation.'},
+                   {t:'Revit Structural Families', d:'BIM-ready models for architectural coordination and planning.'},
+                   {t:'Polarity Alignment Guide', d:'Essential safety logic for T-Shape and Rectangle topologies.'},
+                   {t:'Thermal Performance Data', d:'Passive cooling efficiency analysis for high-load environments.'}
+                ]" :key="item.t" class="bg-white p-12 rounded-[4rem] border border-slate-50 shadow-sm hover:shadow-2xl transition-all group cursor-pointer">
                    <div class="w-20 h-20 bg-[#2563eb]/5 text-[#2563eb] rounded-[2rem] flex items-center justify-center mb-10 group-hover:bg-[#2563eb] group-hover:text-white transition-all duration-500"><Download size="32"/></div>
-                   <h4 class="text-3xl font-black uppercase tracking-tight text-[#0f172a] mb-6 leading-none">
-                      {{ ['Full Catalog v2.9', 'Installation Kit', 'DIALux Files', 'Revit Families', 'Safety Protocol', 'Power Logic'][i-1] }}
-                   </h4>
-                   <p class="text-slate-400 text-lg mb-10 font-medium leading-relaxed italic">Advanced technical documentation.</p>
-                   <button class="flex items-center gap-4 text-[11px] font-black uppercase tracking-widest text-[#2563eb]">Secure Download <ArrowUpRight size="16"/></button>
+                   <h4 class="text-3xl font-black uppercase tracking-tight text-[#0f172a] mb-6 leading-none">{{ item.t }}</h4>
+                   <p class="text-slate-400 text-lg mb-10 font-medium leading-relaxed italic">{{ item.d }}</p>
+                   <button class="flex items-center gap-4 text-[11px] font-black uppercase tracking-widest text-[#2563eb]">Request Secure Access <ArrowUpRight size="16"/></button>
                 </div>
              </div>
+
           </div>
        </div>
 
@@ -563,16 +616,27 @@ const steps = [
                              <th class="py-12 px-16 text-right bg-[#0f172a] text-white">Subtotal</th>
                            </tr>
                          </thead>
-                         <tbody class="divide-y divide-slate-50">
-                            <tr v-for="(item, i) in generatedBOM" :key="i">
+                         <tbody v-for="[groupName, items] in groupedBOM" :key="groupName">
+                            <tr class="bg-slate-50/50">
+                               <td colspan="3" class="py-4 px-10 text-[10px] font-black uppercase tracking-[0.6em] text-[#2563eb] border-y border-slate-100">{{ groupName }}</td>
+                            </tr>
+                            <tr v-for="(item, i) in items" :key="i" class="border-b border-slate-50 last:border-0 hover:bg-slate-50/20 transition-all group">
                                <td class="py-10 px-10 flex gap-8 items-center">
-                                  <img v-if="item.photo" :src="item.photo" class="w-20 h-20 object-contain bg-slate-50 rounded-2xl p-2" />
+                                  <div class="w-20 h-20 bg-slate-50 rounded-2xl p-2 flex items-center justify-center border border-slate-100 group-hover:bg-white transition-all">
+                                    <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                    <Package v-else class="text-slate-200" size="24"/>
+                                  </div>
                                   <div>
-                                     <div class="text-3xl font-black uppercase italic font-serif text-[#0f172a]">{{ safeUpper(item.model) }}</div>
-                                     <a :href="SHEET_URL" target="_blank" class="text-[10px] font-black text-[#2563eb] italic hover:border-b border-[#2563eb]">Verify Registry Price &gt;</a>
+                                     <div class="text-3xl font-black uppercase italic font-serif text-[#0f172a] leading-none mb-2">{{ safeUpper(item.model) }}</div>
+                                     <div class="flex items-center gap-4">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ item.description }}</p>
+                                        <a :href="SHEET_URL" target="_blank" class="text-[9px] font-black text-[#2563eb] italic hover:border-b border-[#2563eb]/20 opacity-0 group-hover:opacity-100 transition-all">Verify Registry &gt;</a>
+                                     </div>
                                   </div>
                                </td>
-                               <td class="py-10 px-10 text-center font-mono font-black text-4xl italic">x{{ item.quantity }}</td>
+                               <td class="py-10 px-10 text-center">
+                                  <span class="text-4xl font-mono font-black italic text-slate-100 group-hover:text-slate-900 transition-all">x{{ item.quantity }}</span>
+                               </td>
                                <td class="py-10 px-16 text-right font-mono font-black text-3xl italic text-[#0f172a]">£{{ (item.price * item.quantity).toLocaleString() }}</td>
                             </tr>
                          </tbody>
@@ -660,16 +724,34 @@ const steps = [
              <p class="text-[12px] font-black text-[#2563eb] mt-6 tracking-widest uppercase italic">DOC-ID: S10-PRO-{{ Date.now().toString(36).toUpperCase() }}</p>
           </div>
        </header>
-       <table class="w-full text-left">
-          <tr class="bg-slate-50 border-b-8 border-[#0f172a] text-[12px] font-black uppercase">
-             <th class="p-10">Reference</th><th class="p-10 text-center">Qty</th><th class="p-10 text-right">Net Price</th>
-          </tr>
-          <tr v-for="item in generatedBOM" :key="item.model" class="border-b border-slate-100">
-             <td class="p-10"><span class="text-4xl font-black uppercase italic font-serif text-[#0f172a]">{{ item.model }}</span><p class="text-[10px] text-slate-400 font-bold uppercase mt-1">{{ item.description }}</p></td>
-             <td class="p-10 text-center font-mono font-black text-6xl italic">x{{ item.quantity }}</td>
-             <td class="p-10 text-right font-mono font-black text-4xl italic">£{{ (item.price * item.quantity).toLocaleString() }}</td>
-          </tr>
-       </table>
+        <main class="space-y-12">
+           <div v-for="[groupName, items] in groupedBOM" :key="groupName" class="break-inside-avoid">
+              <h4 class="text-[14px] font-black uppercase tracking-[0.8em] text-[#2563eb] mb-8 border-b-4 border-[#0f172a] pb-4 w-fit">{{ groupName }}</h4>
+              <table class="w-full text-left border-collapse">
+                 <thead>
+                    <tr class="text-[10px] font-black uppercase tracking-[0.4em] bg-slate-50 text-slate-400">
+                       <th class="py-6 px-10 w-24">REF</th>
+                       <th class="py-6 px-10">ENGINEERING COMPONENT</th>
+                       <th class="py-6 px-10 text-center">QTY</th>
+                       <th class="py-6 px-16 text-right">SUBTOTAL</th>
+                    </tr>
+                 </thead>
+                 <tbody class="divide-y divide-slate-100">
+                    <tr v-for="item in items" :key="item.model" class="border-b border-slate-50">
+                       <td class="py-8 px-10">
+                          <img v-if="item.photo" :src="item.photo" class="w-16 h-16 object-contain mix-blend-multiply" />
+                       </td>
+                       <td class="py-8 px-10">
+                          <span class="text-3xl font-black uppercase italic font-serif text-[#0f172a]">{{ safeUpper(item.model) }}</span>
+                          <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 italic">{{ item.description }}</p>
+                       </td>
+                       <td class="py-8 px-10 text-center font-mono font-black text-5xl italic">x{{ item.quantity }}</td>
+                       <td class="py-8 px-16 text-right font-mono font-black text-3xl italic">£{{ (item.price * item.quantity).toLocaleString() }}</td>
+                    </tr>
+                 </tbody>
+              </table>
+           </div>
+        </main>
        <footer class="mt-40 pt-20 border-t-[10px] border-slate-50 flex justify-between items-end">
           <div class="text-5xl font-black uppercase italic font-serif text-[#0f172a]">ACOfusion Global (UK) Ltd</div>
           <div class="text-right text-[11px] font-mono font-black italic text-slate-300">AUTOMATED B2B ENGINEERING_v2.9</div>
