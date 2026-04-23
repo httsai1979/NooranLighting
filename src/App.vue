@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { 
   Check, 
   ChevronRight, 
@@ -72,8 +72,32 @@ const fixDriveUrl = (url: any) => {
   return strUrl;
 };
 
+// --- Persistence Logic ---
+const saveToLocal = () => {
+  localStorage.setItem('aco_config', JSON.stringify(config.value))
+}
+
+watch(config, saveToLocal, { deep: true })
+
+// --- SEO & Meta Title Engine ---
+watch([currentView, step], () => {
+  const titles: Record<string, string> = {
+    LANDING: 'ACOfusion | Home of S10 Magnetic Track Architecture',
+    PROJECTS: 'Architectural Impact | ACOfusion Portfolios',
+    SOLUTIONS: 'Technical Registry & Manuals | ACOfusion S10',
+    CONFIGURATOR: `S10 Simulator - Step ${step.value + 1} | ACOfusion`
+  }
+  document.title = titles[currentView.value] || 'ACOfusion Lighting'
+}, { immediate: true })
+
 // --- Data Synchronisation ---
 onMounted(async () => {
+  // Load Persistence
+  const saved = localStorage.getItem('aco_config')
+  if (saved) {
+    try { config.value = JSON.parse(saved) } catch(e) {}
+  }
+
   try {
     const res = await fetch(GAS_URL)
     const json = await res.json()
@@ -333,10 +357,30 @@ const navigate = (view: any) => {
 
        <!-- VIEW: PROJECTS -->
        <div v-if="currentView === 'PROJECTS'" class="animate-in slide-in-from-bottom-10 duration-1000 py-20 px-6 lg:px-20">
-          <header class="max-w-4xl mb-20">
-             <h2 class="text-7xl lg:text-9xl font-black tracking-tighter italic font-serif mb-8 text-[#0f172a]">The <span class="text-[#2563eb]">Impact</span>.</h2>
-             <p class="text-2xl text-slate-400 font-light leading-relaxed">System applications in real-world architectural environments. From high-end retail to elite residences.</p>
+          <header class="max-w-4xl mb-24">
+             <h2 class="text-7xl lg:text-[120px] font-black tracking-tighter italic font-serif mb-8 text-[#0f172a]">The <span class="text-[#2563eb]">Impact</span>.</h2>
+             <p class="text-2xl text-slate-400 font-light leading-relaxed">Cross-sectional analysis of architectural lighting implementations. S10 series protocol in elite environments.</p>
           </header>
+
+          <!-- Comparative Architecture (Before/After) -->
+          <section class="mb-32">
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-[#0f172a] rounded-[5rem] overflow-hidden group">
+                <div class="relative overflow-hidden aspect-video">
+                   <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80" class="w-full h-full object-cover grayscale opacity-40" />
+                   <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="px-6 py-2 bg-white/10 backdrop-blur text-[10px] font-black uppercase text-white tracking-[0.5em] border border-white/20 rounded-full">Structural Skeleton</span>
+                   </div>
+                </div>
+                <div class="relative overflow-hidden aspect-video">
+                   <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80" class="w-full h-full object-cover" />
+                   <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="px-6 py-2 bg-[#2563eb] text-[10px] font-black uppercase text-white tracking-[0.5em] rounded-full shadow-2xl">S10 Activated</span>
+                   </div>
+                </div>
+             </div>
+             <p class="mt-8 text-center text-slate-400 text-[11px] font-black uppercase tracking-[0.8em]">Visual Synchronisation Module</p>
+          </section>
+
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
              <div v-for="p in projects" :key="p.id" class="group cursor-pointer">
                 <div class="aspect-[16/10] bg-slate-100 rounded-[3rem] overflow-hidden mb-8 relative border border-slate-100">
@@ -348,6 +392,7 @@ const navigate = (view: any) => {
              </div>
           </div>
        </div>
+
 
        <!-- VIEW: SOLUTIONS (Engineering & Manuals) -->
        <div v-if="currentView === 'SOLUTIONS'" class="animate-in slide-in-from-bottom-10 duration-1000 min-h-screen bg-slate-50 py-20 px-6 lg:px-20">
@@ -765,8 +810,20 @@ const navigate = (view: any) => {
        </footer>
     </div>
 
-  </div>
-</template>
+    </div>
+
+    <!-- Persistent Growth & Support Module (Floating Action) -->
+    <a href="https://wa.me/447510317505" target="_blank" class="fixed bottom-10 right-10 z-[350] group flex items-center gap-6 print:hidden">
+       <div class="bg-white border border-slate-100 shadow-2xl px-6 py-4 rounded-3xl opacity-0 translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all pointer-events-none">
+          <span class="text-[10px] font-black uppercase tracking-widest text-[#0f172a]">Request Expert Quotation</span>
+          <p class="text-[9px] font-medium text-slate-400 mt-1">James Tsai | UK Technical Liaison</p>
+       </div>
+       <div class="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.4)] hover:bg-emerald-500 hover:scale-110 active:scale-95 transition-all">
+          <MessageCircle size="32" />
+          <div class="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-20 group-hover:opacity-0 transition-opacity"></div>
+       </div>
+    </a>
+
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
