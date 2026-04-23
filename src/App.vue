@@ -353,7 +353,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
               </div>
               <div class="bg-zinc-950 border border-zinc-900 p-12 rounded-[2rem] shadow-2xl shadow-white/5">
                 <div class="text-7xl font-light tracking-tighter mb-8">
-                  {{ config.totalLength.toFixed(1) }}<span class="text-xl ml-2 text-zinc-700 uppercase tracking-widest font-black">Metres</span>
+                  {{ (config.totalLength || 0).toFixed(1) }}<span class="text-xl ml-2 text-zinc-700 uppercase tracking-widest font-black">Metres</span>
                 </div>
                 <input 
                   type="range" min="1" max="50" step="0.5" 
@@ -410,22 +410,22 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
               
               <div 
                 :class="['p-8 rounded-[2rem] border-2 flex flex-col sm:flex-row items-center justify-between gap-6 transition-colors', 
-                totalWatts > maxDriverLoad ? 'border-red-950 bg-red-950/20' : 'border-zinc-900 bg-zinc-950/50']"
+                (totalLoad || 0) > maxPossibleDriverCap ? 'border-red-950 bg-red-950/20' : 'border-zinc-900 bg-zinc-950/50']"
               >
                 <div class="flex items-center gap-6">
-                  <div :class="['p-5 rounded-3xl', totalWatts > maxDriverLoad ? 'bg-red-500 text-black' : 'bg-zinc-100 text-black']">
-                    <Zap v-if="totalWatts <= maxDriverLoad" />
+                  <div :class="['p-5 rounded-3xl', (totalLoad || 0) > maxPossibleDriverCap ? 'bg-red-500 text-black' : 'bg-zinc-100 text-black']">
+                    <Zap v-if="(totalLoad || 0) <= maxPossibleDriverCap" />
                     <AlertCircle v-else />
                   </div>
                   <div>
                     <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-black">Load Demand</p>
-                    <p class="text-6xl font-light tracking-tighter">{{ totalWatts.toFixed(0) }}W</p>
+                    <p class="text-6xl font-light tracking-tighter">{{ (totalLoad || 0).toFixed(0) }}W</p>
                   </div>
                 </div>
                 <div class="text-center sm:text-right">
                   <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-black">Status</p>
-                  <p :class="['text-2xl font-medium mt-1', totalWatts > maxDriverLoad ? 'text-red-500' : 'text-green-500']">
-                    {{ totalWatts > maxDriverLoad ? 'OVERLOADED' : 'OPTIMAL' }}
+                  <p :class="['text-2xl font-medium mt-1', (totalLoad || 0) > maxPossibleDriverCap ? 'text-red-500' : 'text-green-500']">
+                    {{ (totalLoad || 0) > maxPossibleDriverCap ? 'OVERLOADED' : 'OPTIMAL' }}
                   </p>
                 </div>
               </div>
@@ -435,7 +435,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                   <p class="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Driver Requirement</p>
                   <div class="mt-4 flex items-center gap-2">
                     <Package size={16} class="text-zinc-400" />
-                    <span class="text-lg">{{ Math.ceil(totalWatts / (200 * 0.8)) }}x 200W Professional DC Power Unit</span>
+                    <span class="text-lg">{{ Math.ceil((totalLoad || 0) / (maxPossibleDriverCap * 0.9)) }}x Professional DC Power Unit</span>
                   </div>
                 </div>
                 <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-900 px-8 flex flex-col justify-center">
@@ -530,8 +530,8 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
           <div class="flex justify-between items-center mb-6">
             <span class="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">System Estimate</span>
             <div class="flex items-center gap-2">
-               <div :class="['w-2 h-2 rounded-full', totalWatts > 200 ? 'bg-red-500' : 'bg-green-500 animate-pulse']"></div>
-               <span class="text-[10px] font-bold font-mono">{{ totalWatts.toFixed(0) }}W</span>
+               <div :class="['w-2 h-2 rounded-full', totalLoad > 200 ? 'bg-red-500' : 'bg-green-500 animate-pulse']"></div>
+               <span class="text-[10px] font-bold font-mono">{{ (totalLoad || 0).toFixed(0) }}W</span>
             </div>
           </div>
           <div class="text-6xl font-light tracking-tighter tabular-nums">
@@ -593,7 +593,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
             <li class="flex justify-between"><span>Mounting Method</span><span class="font-bold">{{ config.mounting }}</span></li>
             <li class="flex justify-between"><span>System Topology</span><span class="font-bold">{{ config.layout }}</span></li>
             <li class="flex justify-between"><span>Total Linear Length</span><span class="font-bold">{{ config.totalLength }}m</span></li>
-            <li class="flex justify-between"><span>Aggregated Load</span><span class="font-bold">{{ totalWatts }}W</span></li>
+            <li class="flex justify-between"><span>Aggregated Load</span><span class="font-bold">{{ (totalLoad || 0).toFixed(0) }}W</span></li>
           </ul>
         </div>
         <div class="bg-zinc-50 p-6 rounded-2xl flex flex-col justify-center items-end">
