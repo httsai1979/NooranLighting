@@ -279,8 +279,8 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
     <!-- Main Layout -->
     <div class="flex flex-col lg:flex-row min-h-screen">
       
-      <!-- Left Column: Configuration Wizard (Mobile First) -->
-      <div class="flex-1 p-6 lg:p-12 lg:border-r lg:border-zinc-900 overflow-y-aut        <header class="mb-12 flex justify-between items-center">
+      <div class="flex-1 p-6 lg:p-12 lg:border-r lg:border-zinc-900 overflow-y-auto">
+        <header class="mb-12 flex justify-between items-center">
           <div>
             <h1 class="text-xs font-black uppercase tracking-[0.5em] text-zinc-600 flex items-center gap-2">
               <span class="w-1.5 h-1.5 bg-zinc-100 rounded-full"></span>
@@ -560,9 +560,6 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                 </div>
                 <div v-if="!showSpecs.specsData" class="text-zinc-600 text-sm italic">Additional technical specifications derived upon order.</div>
               </div>
-            </div>
-          </div>
-v>
             </div>
           </div>
           
