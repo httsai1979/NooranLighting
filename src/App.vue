@@ -224,108 +224,158 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
 
     <div class="flex-1 flex flex-col lg:flex-row relative">
       
-      <!-- Stepper Sidebar -->
-      <aside class="hidden lg:flex w-[260px] bg-[#0f172a] border-r border-slate-800/50 p-10 flex-col shrink-0 relative z-30">
+    <div class="flex-1 flex flex-col lg:flex-row relative">
+      
+      <!-- Premium Nav Sidebar (Desktop) -->
+      <aside class="hidden lg:flex w-[280px] bg-white border-r border-slate-100 p-12 flex-col shrink-0 relative z-30 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
         <div class="mb-16">
-          <h1 class="text-2xl font-black uppercase tracking-tighter text-white font-serif italic">ACOfusion</h1>
-          <p class="text-[9px] font-bold text-[#2563eb] uppercase tracking-widest mt-1">Industrial Configurator v2.9</p>
+          <h1 class="text-3xl font-black tracking-tighter text-[#0f172a] font-serif italic">ACO<span class="text-[#2563eb] font-sans not-italic">S10</span></h1>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Professional Lighting System</p>
         </div>
 
-        <nav class="flex-1 space-y-4">
-          <div v-for="(s, idx) in steps" :key="s.id" class="relative pl-10 pb-8 last:pb-0" :class="idx <= step ? 'opacity-100' : 'opacity-20'">
-             <div v-if="idx < steps.length - 1" class="absolute left-[13px] top-6 bottom-0 w-px border-l-2 border-dotted border-slate-700"></div>
+        <nav class="flex-1 space-y-6">
+          <div v-for="(s, idx) in steps" :key="s.id" @click="idx <= step ? step = idx : null" 
+             class="group cursor-pointer relative pl-12 pb-10 last:pb-0" :class="idx <= step ? 'opacity-100' : 'opacity-30'">
+             <div v-if="idx < steps.length - 1" class="absolute left-[13px] top-8 bottom-0 w-px bg-slate-100 group-hover:bg-blue-100 transition-colors"></div>
              <div class="absolute left-0 top-1 w-7 h-7 rounded-full flex items-center justify-center transition-all z-10"
-                :class="idx < step ? 'bg-[#2563eb] text-white' : (idx === step ? 'bg-white border-2 border-[#2563eb] text-[#2563eb]' : 'bg-slate-800 border-2 border-slate-700')">
+                :class="idx < step ? 'bg-emerald-500 text-white' : (idx === step ? 'bg-[#2563eb] text-white ring-4 ring-blue-50' : 'bg-slate-50 text-slate-300')">
                 <Check v-if="idx < step" size="14" stroke-width="4" />
-                <div v-else-if="idx === step" class="w-2 h-2 bg-[#2563eb] rounded-full"></div>
+                <span v-else class="text-[10px] font-black">{{ idx + 1 }}</span>
              </div>
-             <h4 class="text-[12px] font-black uppercase tracking-widest">{{ s.name }}</h4>
-             <p v-if="idx === step" class="text-[9px] text-[#2563eb] font-bold mt-1 uppercase">{{ s.desc }}</p>
+             <h4 class="text-[13px] font-black uppercase tracking-widest transition-colors" :class="idx === step ? 'text-[#2563eb]' : 'text-slate-600'">{{ s.name }}</h4>
+             <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">{{ s.desc }}</p>
           </div>
         </nav>
 
-        <footer class="mt-auto pt-10 border-t border-slate-800 space-y-4">
-           <a href="https://www.acofusion.com" target="_blank" class="flex gap-3 items-center text-[10px] font-black text-slate-500 hover:text-white transition-colors uppercase">
-              <Monitor size="14"/> acofusion.com
-           </a>
-           <a href="mailto:james@acofusion.com" class="flex gap-3 items-center text-[10px] font-bold text-slate-600 hover:text-white transition-colors lowercase">
-              <Smartphone size="14"/> james@acofusion.com
-           </a>
+        <footer class="mt-auto pt-10 border-t border-slate-50">
+           <div class="bg-blue-50 rounded-2xl p-6 mb-8">
+              <p class="text-[9px] font-black uppercase text-[#2563eb] mb-2 tracking-widest">Support Line</p>
+              <a href="tel:+44201234567" class="text-sm font-bold text-slate-900 block flex items-center gap-2 mb-1"><Smartphone size="14"/> +44 20 1234 567</a>
+              <a href="mailto:expert@acofusion.com" class="text-[10px] font-medium text-slate-500 hover:text-[#2563eb] transition-colors">expert@acofusion.com</a>
+           </div>
         </footer>
       </aside>
 
+      <!-- Mobile Header -->
+      <header class="lg:hidden bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-[100] flex justify-between items-center shadow-sm">
+         <h1 class="text-xl font-black tracking-tighter text-[#0f172a] font-serif italic">ACO<span class="text-[#2563eb] font-sans not-italic">S10</span></h1>
+         <div class="flex items-center gap-3">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Step {{ step + 1 }}/5</span>
+            <div class="w-12 h-1 px-0.5 bg-slate-100 rounded-full overflow-hidden">
+               <div class="h-full bg-[#2563eb]" :style="`width: ${((step+1)/5)*100}%`"></div>
+            </div>
+         </div>
+      </header>
+
       <!-- Main Interaction Pane -->
-      <main class="flex-1 bg-white text-slate-900 overflow-y-auto p-6 lg:p-20 relative z-20 print:hidden transition-all">
-         <div class="max-w-4xl mx-auto flex flex-col min-h-full">
+      <main class="flex-1 bg-white text-slate-900 overflow-y-auto p-4 lg:p-20 relative z-20 print:hidden transition-all pb-32 lg:pb-20">
+         <div class="max-w-5xl mx-auto flex flex-col min-h-full">
             
-            <header class="flex justify-between items-center text-slate-300 font-mono text-[10px] uppercase tracking-[0.5em] mb-16">
-               <span>SYS:ACO_S10_PROTO</span>
-               <div class="h-1 flex-1 mx-10 bg-slate-100 rounded-full overflow-hidden">
+            <header class="hidden lg:flex justify-between items-center text-slate-300 font-mono text-[10px] uppercase tracking-[0.5em] mb-12">
+               <span class="flex items-center gap-2"><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> System Online</span>
+               <div class="h-[1px] flex-1 mx-10 bg-slate-100 rounded-full overflow-hidden">
                   <div class="h-full bg-[#2563eb] transition-all duration-1000" :style="`width: ${((step+1)/steps.length)*100}%` "></div>
                </div>
-               <span>{{ step + 1 }} / 5</span>
+               <span class="text-slate-900 font-bold">CONFIGURATION LOGIC 1.0</span>
             </header>
 
             <Transition name="slide" mode="out-in">
                <div :key="step" class="flex-1">
                   
-                  <div v-if="step === 0" class="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                     <h2 class="text-7xl font-light tracking-tighter italic font-serif leading-none">Mounting Style</h2>
-                     <div class="grid grid-cols-2 gap-6">
+                  <div v-if="step === 0" class="space-y-8 lg:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                     <div class="max-w-2xl">
+                        <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-6">Discovery <br/><span class="italic font-serif font-light text-slate-400">Mounting Environment</span></h2>
+                        <p class="text-base lg:text-xl text-slate-500 font-medium leading-relaxed">Choose the installation method that fits your architectural vision. Every selection auto-configures the specific rail infrastructure.</p>
+                     </div>
+                     
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
                         <button v-for="m in (['Surface/Hanging', 'Embedded concealed', 'Batch ash track', 'Spring fixed', 'Ceiling soft film'] as MountingType[])" :key="m" @click="config.mounting = m"
-                           class="p-10 border-2 rounded-[2.5rem] text-left transition-all relative overflow-hidden"
-                           :class="config.mounting === m ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 hover:border-slate-200' ">
-                           <Layers class="mb-8 w-12 h-12" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-100' "/>
-                           <span class="block text-2xl font-black uppercase tracking-tighter">{{ m }}</span>
-                           <p class="text-[10px] font-bold text-slate-400 uppercase mt-4">Series Mapping Applied</p>
-                           <div v-if="m.includes('concealed') || m.includes('ash') || m.includes('Spring')" class="mt-4 p-3 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase rounded-xl border border-amber-100 italic">開槽尺寸: 22-25mm</div>
+                           class="p-6 lg:p-10 border-2 rounded-[2.5rem] text-left transition-all relative overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1"
+                           :class="config.mounting === m ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 hover:border-slate-100 bg-slate-50/30' ">
+                           <div class="flex justify-between items-start mb-8">
+                              <Layers class="w-10 h-10 lg:w-16 lg:h-16 transition-transform group-hover:scale-110" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-200' "/>
+                              <div v-if="config.mounting === m" class="bg-[#2563eb] text-white p-2 rounded-full shadow-lg"><Check size="20" stroke-width="4"/></div>
+                           </div>
+                           <span class="block text-2xl lg:text-4xl font-black uppercase tracking-tighter text-slate-900">{{ m }}</span>
+                           <p class="text-[10px] font-bold text-slate-400 uppercase mt-4 tracking-widest">Protocol Series Applied</p>
+                           <div v-if="m.includes('concealed') || m.includes('ash') || m.includes('Spring')" 
+                              class="mt-6 p-4 bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase rounded-2xl border border-amber-100 italic flex items-center gap-3">
+                              <AlertTriangle size="14"/> 開槽尺寸: 22-25mm
+                           </div>
                         </button>
                      </div>
                   </div>
 
                   <div v-if="step === 1" class="space-y-12">
-                     <h2 class="text-7xl font-light tracking-tighter italic font-serif mb-12">System Topology</h2>
-                     <div class="grid grid-cols-2 gap-6">
+                     <div class="max-w-2xl">
+                        <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-6">Select <br/><span class="italic font-serif font-light text-slate-400">Topology</span></h2>
+                        <p class="text-base lg:text-xl text-slate-500 font-medium leading-relaxed">Determine the layout architecture. Required corner modules and joint connectors will be calculated automatically.</p>
+                     </div>
+                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
                         <button v-for="l in (['Straight', 'L-Shape', 'T-Shape', 'Rectangle'] as LayoutType[])" :key="l" @click="config.layout = l"
-                           class="p-8 border-2 rounded-[2.5rem] flex items-center gap-8 transition-all"
-                           :class="config.layout === l ? 'border-[#2563eb] bg-blue-50/10' : 'border-slate-50 hover:border-slate-100' ">
-                           <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 shadow-sm">
-                              <LayoutIcon class="text-slate-300" size="28" />
+                           class="p-6 lg:p-8 border-2 rounded-[3rem] flex items-center gap-6 lg:gap-10 transition-all hover:bg-slate-50 hover:border-slate-200"
+                           :class="config.layout === l ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 bg-slate-50/30' ">
+                           <div class="w-16 h-16 lg:w-24 lg:h-24 bg-white rounded-3xl flex items-center justify-center shrink-0 border border-slate-100 shadow-sm relative overflow-hidden">
+                              <LayoutIcon class="relative z-10 transition-colors" :class="config.layout === l ? 'text-[#2563eb]' : 'text-slate-300'" size="32" />
+                              <div v-if="config.layout === l" class="absolute inset-0 bg-blue-50/50 animate-pulse"></div>
                            </div>
-                           <span class="text-lg font-black uppercase tracking-widest">{{ l }}</span>
+                           <div class="text-left">
+                              <span class="block text-xl lg:text-3xl font-black uppercase tracking-tighter text-slate-900">{{ l }}</span>
+                              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Smart Topology Mapping</p>
+                           </div>
                         </button>
                      </div>
                   </div>
 
-                  <div v-if="step === 2" class="space-y-12 text-center py-20 bg-slate-50/50 rounded-[4rem] border border-slate-100">
-                     <h2 class="text-[180px] font-thin text-slate-900 tabular-nums leading-none tracking-tighter italic font-serif">
-                        {{ config.totalLength }}<span class="text-4xl font-black text-[#2563eb] not-italic ml-6 mb-20 uppercase">mm</span>
-                     </h2>
-                     <div class="max-w-xl mx-auto px-10">
-                        <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#2563eb] h-1 bg-slate-200 rounded-full" />
-                        <div class="flex justify-between text-[10px] font-black uppercase text-slate-300 mt-6 tracking-widest"><span>Min 500mm</span><span>Max 10,000mm</span></div>
+                  <div v-if="step === 2" class="space-y-12 py-10 lg:py-20 text-center bg-slate-50/40 rounded-[4rem] border border-slate-100 shadow-inner px-6">
+                     <h2 class="text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 mb-6 uppercase">System Dimension</h2>
+                     <div class="text-[80px] lg:text-[180px] font-thin text-slate-900 tabular-nums leading-none tracking-tighter italic font-serif flex items-center justify-center">
+                        {{ config.totalLength }}<span class="text-2xl lg:text-4xl font-black text-[#2563eb] not-italic ml-4 lg:ml-8 mt-10 lg:mt-20">MM</span>
+                     </div>
+                     <div class="max-w-xl mx-auto px-6 lg:px-10 mt-12">
+                        <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#2563eb] h-1.5 bg-slate-200 rounded-full" />
+                        <div class="flex justify-between text-[11px] font-black uppercase text-slate-400 mt-8 tracking-[0.3em]">
+                           <span class="bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">Min 500mm</span>
+                           <span class="bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">Max 10,000mm</span>
+                        </div>
                      </div>
                   </div>
 
                   <div v-if="step === 3" class="space-y-12">
-                     <header class="flex justify-between items-end border-b border-slate-50 pb-10 mb-10">
-                        <h2 class="text-7xl font-light italic font-serif leading-none">Luminaires</h2>
-                        <div v-if="config.selectedLuminaires.length === 0" class="text-red-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-bounce">
+                     <header class="flex flex-col lg:flex-row lg:justify-between lg:items-end border-b border-slate-100 pb-10 mb-8 gap-4">
+                        <div>
+                           <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none">The <span class="text-[#2563eb]">Modules</span></h2>
+                           <p class="text-slate-500 font-medium mt-4 text-lg">Select magnetic luminaires to integrate into your track configuration.</p>
+                        </div>
+                        <div v-if="config.selectedLuminaires.length === 0" class="bg-rose-50 text-rose-500 px-6 py-3 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-3 self-start animate-bounce border border-rose-100">
                            <AlertTriangle size="14"/> Selection Required
                         </div>
                      </header>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto pr-6 custom-scrollbar">
-                        <div v-for="lamp in data.lamps" :key="lamp.model" class="p-8 border-2 rounded-[3.5rem] bg-white hover:border-[#2563eb]/20 transition-all shadow-sm group">
-                           <div class="aspect-square bg-slate-50 rounded-[3rem] overflow-hidden mb-8 relative border border-slate-50/50">
-                              <img :src="fixDriveUrl(lamp.photo)" @error="e=>(e.target as any).style.opacity='0.1'" class="w-full h-full object-contain p-12 mix-blend-multiply transition-transform duration-700 group-hover:scale-110" />
-                              <button @click="showSpecs = lamp" class="absolute bottom-6 right-6 p-4 bg-white/90 backdrop-blur rounded-full shadow-lg text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all"><Maximize2 size="18"/></button>
+
+                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 transition-all">
+                        <div v-for="lamp in data.lamps" :key="lamp.model" class="p-4 lg:p-8 border border-slate-100 rounded-[3rem] bg-white transition-all hover:shadow-2xl hover:border-[#2563eb]/20 group shadow-sm">
+                           <div class="aspect-[4/3] lg:aspect-square bg-slate-50 rounded-[2.5rem] overflow-hidden mb-6 lg:mb-8 relative border border-slate-50/50 group-hover:bg-blue-50/30 transition-colors">
+                              <img :src="fixDriveUrl(lamp.photo)" @error="e=>(e.target as any).style.opacity='0.1'" class="w-full h-full object-contain p-8 lg:p-12 transition-transform duration-700 group-hover:scale-105" />
+                              <button @click="showSpecs = lamp" class="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-full shadow-lg text-slate-400 hover:text-[#2563eb] hover:bg-white transition-all"><Info size="18"/></button>
                            </div>
-                           <h3 class="text-2xl font-black uppercase tracking-tighter mb-1">{{ safeUpper(lamp.model) }}</h3>
-                           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">{{ lamp.power }}W Engineering Module</p>
-                           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-[2rem] border border-slate-100">
-                              <button @click="updateLamp(lamp, -1)" class="p-4 text-slate-300 hover:text-slate-900 transition-colors"><Minus/></button>
-                              <span class="text-4xl font-mono font-black italic text-slate-900">{{ getQty(lamp.model) }}</span>
-                              <button @click="updateLamp(lamp, 1)" class="p-4 text-slate-300 hover:text-slate-900 transition-colors"><Plus/></button>
+                           <div class="px-2">
+                              <div class="flex justify-between items-start mb-2">
+                                 <h3 class="text-xl lg:text-2xl font-black uppercase tracking-tighter text-slate-900">{{ safeUpper(lamp.model) }}</h3>
+                                 <span class="text-lg font-mono font-black italic text-[#2563eb]">£{{ lamp.price }}</span>
+                              </div>
+                              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">{{ lamp.power }}W Precision Optic</p>
+                              
+                              <div class="flex items-center justify-between p-2 bg-slate-50 rounded-full border border-slate-100 group-hover:bg-white transition-colors">
+                                 <button @click="updateLamp(lamp, -1)" 
+                                    class="w-12 h-12 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-900 hover:bg-slate-200 transition-all">
+                                    <Minus size="18"/>
+                                 </button>
+                                 <span class="text-3xl font-mono font-black italic text-slate-900">{{ getQty(lamp.model) }}</span>
+                                 <button @click="updateLamp(lamp, 1)" 
+                                    class="w-12 h-12 flex items-center justify-center rounded-full bg-[#0f172a] text-white hover:bg-[#2563eb] shadow-lg transition-all">
+                                    <Plus size="18"/>
+                                 </button>
+                              </div>
                            </div>
                         </div>
                      </div>
@@ -374,70 +424,80 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
          </div>
       </main>
 
-      <!-- Right Pane: Live BOM Workspace (35%) -->
-      <aside v-if="!loading" class="hidden xl:flex w-[35%] bg-slate-50 border-l border-slate-100 p-16 flex-col h-screen sticky top-0 shrink-0 print:hidden overflow-hidden">
-         <div class="flex justify-between items-end mb-16 border-b border-slate-200 pb-8">
+      <!-- Price Bar (Mobile Only Style) -->
+      <div v-if="step < 4" class="lg:hidden fixed bottom-6 left-6 right-6 z-[100] animate-in slide-in-from-bottom-10">
+         <div class="bg-[#0f172a] text-white p-4 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex justify-between items-center border border-white/10 backdrop-blur-xl">
             <div>
-               <h4 class="text-[11px] font-black uppercase tracking-[0.6em] text-[#2563eb]">Engineering Workspace</h4>
-               <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">Live Technical Logic System</p>
+               <p class="text-[8px] font-black uppercase text-white/40 tracking-widest">Running Total</p>
+               <span class="text-2xl font-mono font-black italic">£{{ totalPrice.toLocaleString() }}</span>
             </div>
-            <Binary class="text-slate-200" size="24"/>
+            <button @click="step++" :disabled="step === 3 && config.selectedLuminaires.length === 0"
+               class="px-8 py-3 bg-[#2563eb] rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-30">
+               Next <ChevronRight size="16"/>
+            </button>
+         </div>
+      </div>
+
+      <!-- Right Pane: Summary Workspace (Desktop 32%) -->
+      <aside v-if="!loading" class="hidden xl:flex w-[32%] bg-slate-50/50 border-l border-slate-100 p-12 flex-col h-screen sticky top-0 shrink-0 print:hidden overflow-hidden">
+         <div class="flex justify-between items-center mb-12">
+            <div>
+               <h4 class="text-[12px] font-black uppercase tracking-[0.4em] text-slate-900">Config Summary</h4>
+               <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">S10 Magnetic Ecosystem</p>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm"><Layers size="16" class="text-slate-400"/></div>
          </div>
 
-         <div class="flex-1 overflow-y-auto pr-4 space-y-6 custom-scrollbar">
+         <div class="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
             <div v-if="generatedBOM.length === 0" class="h-full flex flex-col items-center justify-center p-20 text-center opacity-10">
-               <Zap size="100"/>
-               <p class="text-xs uppercase font-black tracking-widest mt-10 italic">Awaiting System Parameters</p>
+               <Zap size="80" class="text-slate-900"/>
+               <p class="text-[10px] uppercase font-black tracking-[0.4em] mt-8 italic">Specify Rails to begin</p>
             </div>
-            <div v-for="(item, i) in generatedBOM" :key="i" class="flex gap-6 items-center animate-in slide-in-from-right-10 duration-500">
-               <div class="w-16 h-16 bg-white rounded-xl border border-slate-200 shrink-0 overflow-hidden flex items-center justify-center p-1 shadow-sm">
-                  <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain mix-blend-multiply" />
+            <div v-for="(item, i) in generatedBOM" :key="i" class="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm animate-in slide-in-from-right-10 duration-500">
+               <div class="w-12 h-12 bg-slate-50 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center p-1">
+                  <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain" />
                </div>
                <div class="flex-1 min-w-0">
-                  <div class="flex justify-between">
-                     <span class="text-[11px] font-black uppercase text-slate-900 truncate leading-none">{{ safeUpper(item.model) }}</span>
+                  <div class="flex justify-between items-baseline">
+                     <span class="text-[11px] font-black uppercase text-slate-900 truncate">{{ safeUpper(item.model) }}</span>
                      <span class="text-xs font-mono font-black italic text-[#2563eb]">x{{ item.quantity }}</span>
                   </div>
-                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1 italic">{{ item.description }}</p>
+                  <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 truncate">{{ item.description }}</p>
                </div>
             </div>
          </div>
 
-         <div class="mt-16 bg-[#0f172a] rounded-[4rem] p-10 text-white relative overflow-hidden group shadow-3xl">
-            <div class="absolute inset-0 bg-[#2563eb] translate-y-full group-hover:translate-y-0 transition-transform duration-1000 z-0"></div>
+         <div class="mt-12 bg-[#0f172a] rounded-[3.5rem] p-10 text-white relative overflow-hidden group shadow-3xl">
+            <div class="absolute inset-0 bg-[#2563eb] translate-y-[101%] group-hover:translate-y-0 transition-transform duration-700 z-0 opacity-10"></div>
             <div class="relative z-10">
-               <!-- Poka-yoke Validation -->
-               <div class="grid grid-cols-3 gap-2 mb-8 border-b border-white/10 pb-6">
-                  <div class="text-center">
-                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Load Status</p>
-                    <span :class="isOverloaded ? 'text-red-400' : 'text-emerald-400'" class="text-[9px] font-bold uppercase tracking-widest">{{ validationStatus.power }}</span>
+               <!-- Sales Validation View -->
+               <div class="space-y-4 mb-10">
+                  <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5 pb-3">
+                     <span>Technical Verification</span>
+                     <span class="text-emerald-400 flex items-center gap-2"><ShieldCheck size="12"/> Active</span>
                   </div>
-                  <div class="text-center border-x border-white/5">
-                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Essentials</p>
-                    <span class="text-emerald-400 text-[9px] font-bold uppercase tracking-widest">{{ validationStatus.accessories }}</span>
-                  </div>
-                  <div class="text-center">
-                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Series</p>
-                    <span class="text-blue-300 text-[9px] font-bold uppercase tracking-widest truncate block">{{ validationStatus.mounting }}</span>
+                  <div class="grid grid-cols-2 gap-4">
+                     <div>
+                        <p class="text-[7px] font-black uppercase text-white/20 mb-1">Max Capacity</p>
+                        <p class="text-[10px] font-mono font-bold" :class="isOverloaded ? 'text-red-400' : 'text-white' ">{{ currentLoad.toFixed(0) }}W / 160W</p>
+                     </div>
+                     <div class="text-right">
+                        <p class="text-[7px] font-black uppercase text-white/20 mb-1">Parts Count</p>
+                        <p class="text-[10px] font-mono font-bold">{{ generatedBOM.reduce((a,c)=>a+c.quantity, 0) }} SKUs</p>
+                     </div>
                   </div>
                </div>
 
-               <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-6 group-hover:border-white/30 transition-colors">
-                  <span class="text-[10px] font-black uppercase tracking-[0.5em] text-white/50">Supply Capability Check</span>
-                  <div class="flex items-center gap-3">
-                     <span class="font-mono text-white text-base font-black italic">{{ currentLoad.toFixed(0) }}W</span>
-                     <div :class="isOverloaded ? 'bg-red-500 scale-150' : 'bg-[#2563eb]' " class="w-2 h-2 rounded-full transition-all group-hover:bg-white animate-pulse"></div>
-                  </div>
+               <div v-if="isOverloaded" class="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-[9px] font-black uppercase italic text-red-400 leading-relaxed">
+                  ⚠️ Power Budget Exceeded. <br/>Consider adding a second feed unit.
                </div>
-               <div v-if="isOverloaded" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-2xl text-[9px] font-bold uppercase italic text-red-200">
-                  負荷超標！建議拆分為兩個或以上的獨立電源系統
-               </div>
+
                <div class="flex justify-between items-end">
                   <div>
-                    <p class="text-[9px] font-black uppercase text-white/40 mb-2">Estimate Subtotal (Net)</p>
-                    <div class="text-[72px] font-thin tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString('en-GB') }}</div>
+                    <p class="text-[10px] font-black uppercase text-white/40 mb-2">Estimated Investment</p>
+                    <div class="text-6xl font-black tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString() }}</div>
                   </div>
-                  <ShieldCheck class="mb-2 text-white/20 group-hover:text-white" size="40"/>
+                  <ChevronRight class="mb-2 text-white/20 group-hover:translate-x-2 transition-transform" size="32"/>
                </div>
             </div>
          </div>
@@ -568,29 +628,62 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --primary: #2563eb;
+  --bg-main: #ffffff;
+  --bg-sub: #f8fafc;
+  --text-main: #0f172a;
+}
 
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
-body { margin: 0; background: #0f172a; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+body { 
+  margin: 0; 
+  background: var(--bg-main); 
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased; 
+  letter-spacing: -0.01em; 
+  font-family: 'Inter', sans-serif;
+}
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.slide-enter-active, .slide-leave-active { transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-.slide-enter-from { opacity: 0; transform: translateY(30px); }
-.slide-leave-to { opacity: 0; transform: translateY(-30px); }
+.slide-enter-active, .slide-leave-active { transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-enter-from { opacity: 0; transform: translateY(20px); }
+.slide-leave-to { opacity: 0; transform: translateY(-20px); }
 
 input[type=range] { -webkit-appearance: none; background: transparent; }
-input[type=range]::-webkit-slider-runnable-track { height: 1px; background: #eee; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #2563eb; cursor: pointer; margin-top: -8px; border: 2px solid white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
+input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #f1f5f9; border-radius: 2px; }
+input[type=range]::-webkit-slider-thumb { 
+  -webkit-appearance: none; 
+  height: 24px; width: 24px; 
+  border-radius: 50%; 
+  background: white; 
+  cursor: pointer; 
+  margin-top: -11px; 
+  border: 2px solid var(--primary); 
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); 
+  transition: all 0.2s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25); }
 
 @media print {
   body { background: white !important; overflow: visible !important; }
   aside, footer, .Transition, #app > div:not(#print-area), button, header { display: none !important; }
-  #print-area { display: block !important; position: static !important; width: 100% !important; margin: 0 !important; padding: 0 !important; transform: scale(1) !important; }
+  #print-area { display: block !important; position: static !important; width: 100% !important; margin: 0 !important; padding: 40px !important; }
   @page { size: A4 portrait; margin: 0; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
+
+/* Custom Utilities */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
 </style>
+
