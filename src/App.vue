@@ -212,22 +212,22 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
 </script>
 
 <template>
-  <div class="h-screen bg-[#0f172a] text-slate-100 font-sans flex overflow-hidden selection:bg-[#2563eb] selection:text-white">
+  <div class="h-screen bg-white text-slate-900 font-sans flex overflow-hidden selection:bg-[#2563eb] selection:text-white">
     
-    <!-- Heavy Loading -->
+    <!-- Premium Experience Loading -->
     <Transition name="fade">
-      <div v-if="loading" class="fixed inset-0 z-[500] bg-[#0f172a] flex flex-col items-center justify-center">
-         <div class="w-16 h-16 border-4 border-slate-800 border-t-[#2563eb] rounded-full animate-spin"></div>
-         <p class="mt-10 text-[10px] font-black uppercase tracking-[0.6em] text-slate-500 animate-pulse">Synchronising S10 Technical Intelligence</p>
+      <div v-if="loading" class="fixed inset-0 z-[500] bg-white flex flex-col items-center justify-center">
+         <div class="w-20 h-20 border-2 border-slate-50 border-t-[#2563eb] rounded-full animate-spin"></div>
+         <p class="mt-12 text-[10px] font-black uppercase tracking-[0.8em] text-slate-300 animate-pulse">Aco Innovation Protocol</p>
       </div>
     </Transition>
 
-    <div class="flex-1 flex flex-col lg:flex-row relative">
-      
+
     <div class="flex-1 flex flex-col lg:flex-row relative">
       
       <!-- Premium Nav Sidebar (Desktop) -->
       <aside class="hidden lg:flex w-[280px] bg-white border-r border-slate-100 p-12 flex-col shrink-0 relative z-30 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
+
         <div class="mb-16">
           <h1 class="text-3xl font-black tracking-tighter text-[#0f172a] font-serif italic">ACO<span class="text-[#2563eb] font-sans not-italic">S10</span></h1>
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Professional Lighting System</p>
