@@ -42,10 +42,18 @@ export type MountingType =
 
 export type LayoutType = 'Straight' | 'L-Shape' | 'T-Shape' | 'Rectangle';
 
+export interface Project {
+  id: number;
+  name: string;
+  location: string;
+  image: string;
+  description: string;
+}
+
 export interface ConfigState {
   mounting: MountingType;
   layout: LayoutType;
-  totalLength: number; // in Metres
+  totalLength: number; // in Millimeters (mm) - Engineering Standard
   selectedLuminaires: {
     item: Luminaire;
     quantity: number;
@@ -62,4 +70,5 @@ export interface BOMItem {
   alert?: string;
   specs?: Record<string, string>;
 }
+
 
