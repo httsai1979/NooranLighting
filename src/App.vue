@@ -11,14 +11,20 @@ import {
   Smartphone,
   Download,
   Info,
-  Maximize2,
-  Plus,
-  Minus,
   Layers,
   Layout as LayoutIcon,
   X,
   ShieldCheck,
-  Binary
+  Instagram,
+  Facebook,
+  Linkedin,
+  MessageCircle,
+  ArrowRight,
+  BookOpen,
+  Image as ImageIcon,
+  Compass,
+  ArrowUpRight,
+  Menu
 } from 'lucide-vue-next'
 import type { Luminaire, Accessory, MountingType, LayoutType, ConfigState, BOMItem } from './types'
 
@@ -29,9 +35,11 @@ const PSU_MAX_W = 160 // Threshold for multi-system split
 
 // --- App State ---
 const loading = ref(true)
+const currentView = ref<'LANDING' | 'PROJECTS' | 'SOLUTIONS' | 'CONFIGURATOR'>('LANDING')
 const step = ref(0)
 const showSpecs = ref<Luminaire | Accessory | null>(null)
 const data = ref<{ lamps: Luminaire[], accessories: Accessory[] }>({ lamps: [], accessories: [] })
+const mobileMenuOpen = ref(false)
 
 const config = ref<ConfigState>({
   mounting: 'Surface/Hanging',
@@ -39,6 +47,18 @@ const config = ref<ConfigState>({
   totalLength: 2000, 
   selectedLuminaires: []
 })
+
+// --- Mock Business Data ---
+const projects = [
+  { id: 1, name: 'London Art Gallery', location: 'Mayfair, UK', image: 'https://images.unsplash.com/photo-1544413164-320092671092?auto=format&fit=crop&q=80', description: 'Precision accent lighting for high-value canvases.' },
+  { id: 2, name: 'Minimalist Residence', location: 'Zurich, CH', image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80', description: 'Discrete track integration for open-plan living.' },
+  { id: 3, name: 'Executive Workspace', location: 'London City', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80', description: 'Balanced flood and spot distribution for high productivity.' }
+]
+
+const installationGuides = [
+  { title: 'S10 Mounting Protocol', desc: 'Step-by-step surface and recessed installation.', category: 'Manual' },
+  { title: 'Electrical Load Logic', desc: 'Configuring N+1 safety redundancy for 48V systems.', category: 'Engineering' }
+]
 
 // --- Logic A: Hardened Image Engine ---
 const fixDriveUrl = (url: any) => {
@@ -208,8 +228,18 @@ const updateLamp = (lamp: Luminaire, delta: number) => {
   } else if (delta > 0) config.value.selectedLuminaires.push({ item: lamp, quantity: 1 })
 }
 const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.model === m)?.quantity || 0
+const startConfiguration = () => {
+  currentView.value = 'CONFIGURATOR'
+  step.value = 0
+}
 
+const navigate = (view: any) => {
+  currentView.value = view
+  mobileMenuOpen.value = false
+  window.scrollTo(0, 0)
+}
 </script>
+
 
 <template>
   <div class="h-screen bg-white text-slate-900 font-sans flex overflow-hidden selection:bg-[#2563eb] selection:text-white">
@@ -220,292 +250,403 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
          <div class="w-20 h-20 border-2 border-slate-50 border-t-[#2563eb] rounded-full animate-spin"></div>
          <p class="mt-12 text-[10px] font-black uppercase tracking-[0.8em] text-slate-300 animate-pulse">Aco Innovation Protocol</p>
       </div>
+    </Transitio    <!-- Global Navigation Header -->
+    <header class="fixed top-0 left-0 right-0 z-[400] bg-white/80 backdrop-blur-xl border-b border-slate-50 px-6 lg:px-12 py-4 flex justify-between items-center">
+       <div class="flex items-center gap-12">
+          <button @click="navigate('LANDING')" class="flex flex-col cursor-pointer">
+             <h1 class="text-2xl font-black tracking-tighter text-[#0f172a] font-serif italic leading-none">ACO<span class="text-[#2563eb] font-sans not-italic">fusion</span></h1>
+             <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lighting Architecture</p>
+          </button>
+
+          <nav class="hidden lg:flex items-center gap-10">
+             <button v-for="v in (['PROJECTS', 'SOLUTIONS'] as const)" :key="v" @click="navigate(v)"
+                class="text-[11px] font-black uppercase tracking-widest transition-colors"
+                :class="currentView === v ? 'text-[#2563eb]' : 'text-slate-400 hover:text-slate-900'">{{ v }}</button>
+          </nav>
+       </div>
+
+       <div class="flex items-center gap-6">
+          <button @click="startConfiguration" 
+             class="hidden sm:flex items-center gap-3 px-8 py-3 bg-[#0f172a] text-white rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-[#2563eb] transition-all group">
+             System Configuration <ArrowRight size="14" class="group-hover:translate-x-1 transition-transform"/>
+          </button>
+          <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-slate-900"><Menu/></button>
+       </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <Transition name="fade">
+       <div v-if="mobileMenuOpen" class="fixed inset-0 z-[500] bg-white p-10 flex flex-col pt-32">
+          <button v-for="v in (['LANDING', 'PROJECTS', 'SOLUTIONS', 'CONFIGURATOR'] as const)" :key="v" @click="navigate(v)"
+             class="text-4xl font-black mb-8 border-b border-slate-50 pb-4 text-left italic font-serif">{{ v }}</button>
+          <button @click="mobileMenuOpen = false" class="absolute top-8 right-8 p-4 bg-slate-50 rounded-full"><X/></button>
+       </div>
     </Transition>
 
-
-    <div class="flex-1 flex flex-col lg:flex-row relative">
-      
-      <!-- Premium Nav Sidebar (Desktop) -->
-      <aside class="hidden lg:flex w-[280px] bg-white border-r border-slate-100 p-12 flex-col shrink-0 relative z-30 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
-
-        <div class="mb-16">
-          <h1 class="text-3xl font-black tracking-tighter text-[#0f172a] font-serif italic">ACO<span class="text-[#2563eb] font-sans not-italic">S10</span></h1>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Professional Lighting System</p>
-        </div>
-
-        <nav class="flex-1 space-y-6">
-          <div v-for="(s, idx) in steps" :key="s.id" @click="idx <= step ? step = idx : null" 
-             class="group cursor-pointer relative pl-12 pb-10 last:pb-0" :class="idx <= step ? 'opacity-100' : 'opacity-30'">
-             <div v-if="idx < steps.length - 1" class="absolute left-[13px] top-8 bottom-0 w-px bg-slate-100 group-hover:bg-blue-100 transition-colors"></div>
-             <div class="absolute left-0 top-1 w-7 h-7 rounded-full flex items-center justify-center transition-all z-10"
-                :class="idx < step ? 'bg-emerald-500 text-white' : (idx === step ? 'bg-[#2563eb] text-white ring-4 ring-blue-50' : 'bg-slate-50 text-slate-300')">
-                <Check v-if="idx < step" size="14" stroke-width="4" />
-                <span v-else class="text-[10px] font-black">{{ idx + 1 }}</span>
+    <div class="flex-1 flex flex-col pt-20 overflow-y-auto">
+       
+       <!-- VIEW: LANDING -->
+       <div v-if="currentView === 'LANDING'" class="animate-in fade-in duration-1000">
+          <!-- Hero Section -->
+          <section class="min-h-[90vh] flex flex-col justify-center px-6 lg:px-20 relative overflow-hidden bg-slate-50">
+             <div class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 items-center gap-20">
+                <div class="space-y-10 z-10">
+                   <div class="inline-flex items-center gap-4 bg-white px-5 py-2 rounded-full border border-slate-100 shadow-sm">
+                      <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                      <span class="text-[10px] font-black uppercase tracking-widest text-[#2563eb]">S10 Magnetic Track System 2026</span>
+                   </div>
+                   <h2 class="text-6xl lg:text-[100px] font-black tracking-tighter text-[#0f172a] leading-[0.9] italic font-serif">
+                      Light is the <br/>Fourth <span class="text-[#2563eb]">Dimension</span>.
+                   </h2>
+                   <p class="text-xl lg:text-3xl text-slate-400 font-light max-w-xl leading-relaxed">
+                      Architectural precision integrated into a 10mm ultra-thin magnetic interface. Engineered in the UK for global standards.
+                   </p>
+                   <div class="flex flex-col sm:flex-row gap-6">
+                      <button @click="startConfiguration" class="px-12 py-6 bg-[#0f172a] text-white rounded-full font-black uppercase tracking-[0.2em] text-[12px] shadow-2xl hover:bg-[#2563eb] transition-all">Start Your Simulation</button>
+                      <button @click="navigate('PROJECTS')" class="px-12 py-6 border-2 border-slate-200 rounded-full font-black uppercase tracking-[0.2em] text-[12px] hover:bg-white transition-all">View Portfolios</button>
+                   </div>
+                </div>
+                <div class="relative group">
+                   <div class="aspect-[4/5] bg-white rounded-[4rem] overflow-hidden shadow-3xl border-[20px] border-white relative">
+                      <img src="https://images.unsplash.com/photo-1544413164-320092671092?auto=format&fit=crop&q=80" class="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110" />
+                      <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a]/60 to-transparent"></div>
+                      <div class="absolute bottom-12 left-12 text-white">
+                         <p class="text-[10px] font-black uppercase tracking-[0.5em] mb-4">Featured Project</p>
+                         <h4 class="text-4xl font-serif italic font-black">Modernist Residence</h4>
+                      </div>
+                   </div>
+                </div>
              </div>
-             <h4 class="text-[13px] font-black uppercase tracking-widest transition-colors" :class="idx === step ? 'text-[#2563eb]' : 'text-slate-600'">{{ s.name }}</h4>
-             <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">{{ s.desc }}</p>
+          </section>
+
+          <!-- Core Philosophy Section -->
+          <section class="py-32 px-6 lg:px-20 bg-white">
+             <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-20">
+                <div v-for="i in [{t:'Architectural Integrity', d:'Discrete integration that respects structural aesthetics.', i:Layers}, {t:'Precision Optics', d:'Calculated beam distribution for absolute lighting control.', i:ShieldCheck}, {t:'Loop Safety Logic', d:'Advanced electrical protocol for system-wide stability.', i:Zap}]" :key="i.t" class="space-y-6">
+                   <div class="w-16 h-16 bg-slate-50 flex items-center justify-center rounded-3xl"><component :is="i.i" class="text-[#2563eb]"/></div>
+                   <h3 class="text-2xl font-black uppercase tracking-tight text-[#0f172a]">{{ i.t }}</h3>
+                   <p class="text-slate-400 leading-relaxed font-medium">{{ i.d }}</p>
+                </div>
+             </div>
+          </section>
+       </div>
+
+       <!-- VIEW: PROJECTS -->
+       <div v-if="currentView === 'PROJECTS'" class="animate-in slide-in-from-bottom-10 duration-1000 py-20 px-6 lg:px-20">
+          <header class="max-w-4xl mb-20">
+             <h2 class="text-7xl lg:text-9xl font-black tracking-tighter italic font-serif mb-8 text-[#0f172a]">The <span class="text-[#2563eb]">Impact</span>.</h2>
+             <p class="text-2xl text-slate-400 font-light leading-relaxed">System applications in real-world architectural environments. From high-end retail to elite residences.</p>
+          </header>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+             <div v-for="p in projects" :key="p.id" class="group cursor-pointer">
+                <div class="aspect-[16/10] bg-slate-100 rounded-[3rem] overflow-hidden mb-8 relative border border-slate-100">
+                   <img :src="p.image" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                   <div class="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest">{{ p.location }}</div>
+                </div>
+                <h4 class="text-2xl font-black uppercase tracking-tight text-[#0f172a] mb-2">{{ p.name }}</h4>
+                <p class="text-slate-400 font-medium leading-relaxed">{{ p.description }}</p>
+             </div>
           </div>
-        </nav>
+       </div>
 
-        <footer class="mt-auto pt-10 border-t border-slate-50">
-           <div class="bg-blue-50 rounded-2xl p-6 mb-8">
-              <p class="text-[9px] font-black uppercase text-[#2563eb] mb-2 tracking-widest">Support Line</p>
-              <a href="tel:+44201234567" class="text-sm font-bold text-slate-900 block flex items-center gap-2 mb-1"><Smartphone size="14"/> +44 20 1234 567</a>
-              <a href="mailto:expert@acofusion.com" class="text-[10px] font-medium text-slate-500 hover:text-[#2563eb] transition-colors">expert@acofusion.com</a>
-           </div>
-        </footer>
-      </aside>
+       <!-- VIEW: SOLUTIONS (Engineering & Manuals) -->
+       <div v-if="currentView === 'SOLUTIONS'" class="animate-in slide-in-from-bottom-10 duration-1000 min-h-screen bg-slate-50 py-20 px-6 lg:px-20">
+          <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20">
+             <aside class="w-full lg:w-1/3 space-y-12">
+                <h2 class="text-6xl font-black tracking-tighter italic font-serif text-[#0f172a]">Technical Hub.</h2>
+                <nav class="space-y-4">
+                   <button class="w-full text-left p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm flex justify-between items-center group">
+                      <span class="text-[12px] font-black uppercase tracking-widest text-slate-900">S10 Installation Manual</span>
+                      <Download size="18" class="text-[#2563eb] group-hover:translate-y-1 transition-transform"/>
+                   </button>
+                   <button class="w-full text-left p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm flex justify-between items-center group">
+                      <span class="text-[12px] font-black uppercase tracking-widest text-[#2563eb]">Engineering Specs (PDF)</span>
+                      <BookOpen size="18" class="text-[#2563eb]"/>
+                   </button>
+                </nav>
+             </aside>
+             <main class="flex-1 space-y-10">
+                <section v-for="g in installationGuides" :key="g.title" class="bg-white p-12 lg:p-20 rounded-[4rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                   <div class="absolute -right-20 -top-20 text-[200px] font-black text-slate-50 italic select-none pointer-events-none">{{ g.category.charAt(0) }}</div>
+                   <span class="px-4 py-2 bg-blue-50 text-[#2563eb] rounded-full text-[10px] font-black uppercase tracking-widest mb-8 inline-block">{{ g.category }}</span>
+                   <h3 class="text-4xl font-black text-[#0f172a] mb-6 uppercase tracking-tighter">{{ g.title }}</h3>
+                   <p class="text-xl text-slate-400 font-light leading-relaxed max-w-xl">{{ g.desc }}</p>
+                   <button class="mt-12 flex items-center gap-4 text-slate-9 stones text-[12px] font-black uppercase tracking-widest hover:text-[#2563eb] transition-colors">Read Protocol <ArrowRight size="16"/></button>
+                </section>
+             </main>
+          </div>
+       </div>
 
-      <!-- Mobile Header -->
-      <header class="lg:hidden bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-[100] flex justify-between items-center shadow-sm">
-         <h1 class="text-xl font-black tracking-tighter text-[#0f172a] font-serif italic">ACO<span class="text-[#2563eb] font-sans not-italic">S10</span></h1>
-         <div class="flex items-center gap-3">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Step {{ step + 1 }}/5</span>
-            <div class="w-12 h-1 px-0.5 bg-slate-100 rounded-full overflow-hidden">
-               <div class="h-full bg-[#2563eb]" :style="`width: ${((step+1)/5)*100}%`"></div>
-            </div>
-         </div>
-      </header>
+       <!-- VIEW: CONFIGURATOR (Original App) -->
+       <div v-if="currentView === 'CONFIGURATOR'" class="flex-1 flex flex-col lg:flex-row relative animate-in fade-in duration-500 h-[calc(100vh-80px)] overflow-hidden">
+          
+          <!-- Premium Nav Sidebar (Desktop) -->
+          <aside class="hidden lg:flex w-[280px] bg-white border-r border-slate-100 p-12 flex-col shrink-0 relative z-30 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
+            <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-10">Logic Steps</h4>
 
-      <!-- Main Interaction Pane -->
-      <main class="flex-1 bg-white text-slate-900 overflow-y-auto p-4 lg:p-20 relative z-20 print:hidden transition-all pb-32 lg:pb-20">
-         <div class="max-w-5xl mx-auto flex flex-col min-h-full">
-            
-            <header class="hidden lg:flex justify-between items-center text-slate-300 font-mono text-[10px] uppercase tracking-[0.5em] mb-12">
-               <span class="flex items-center gap-2"><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> System Online</span>
-               <div class="h-[1px] flex-1 mx-10 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-[#2563eb] transition-all duration-1000" :style="`width: ${((step+1)/steps.length)*100}%` "></div>
-               </div>
-               <span class="text-slate-900 font-bold">CONFIGURATION LOGIC 1.0</span>
-            </header>
+            <nav class="flex-1 space-y-6">
+              <div v-for="(s, idx) in steps" :key="s.id" @click="idx <= step ? step = idx : null" 
+                 class="group cursor-pointer relative pl-12 pb-10 last:pb-0" :class="idx <= step ? 'opacity-100' : 'opacity-30'">
+                 <div v-if="idx < steps.length - 1" class="absolute left-[13px] top-8 bottom-0 w-px bg-slate-100 group-hover:bg-blue-100 transition-colors"></div>
+                 <div class="absolute left-0 top-1 w-7 h-7 rounded-full flex items-center justify-center transition-all z-10"
+                    :class="idx < step ? 'bg-emerald-500 text-white' : (idx === step ? 'bg-[#2563eb] text-white ring-4 ring-blue-50' : 'bg-slate-50 text-slate-300')">
+                    <Check v-if="idx < step" size="14" stroke-width="4" />
+                    <span v-else class="text-[10px] font-black">{{ idx + 1 }}</span>
+                 </div>
+                 <h4 class="text-[13px] font-black uppercase tracking-widest transition-colors" :class="idx === step ? 'text-[#2563eb]' : 'text-slate-600'">{{ s.name }}</h4>
+                 <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">{{ s.desc }}</p>
+              </div>
+            </nav>
+            <button @click="navigate('LANDING')" class="mt-8 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"><X size="14"/> Exit Simulator</button>
+          </aside>
 
-            <Transition name="slide" mode="out-in">
-               <div :key="step" class="flex-1">
-                  
-                  <div v-if="step === 0" class="space-y-8 lg:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                     <div class="max-w-2xl">
-                        <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-6">Discovery <br/><span class="italic font-serif font-light text-slate-400">Mounting Environment</span></h2>
-                        <p class="text-base lg:text-xl text-slate-500 font-medium leading-relaxed">Choose the installation method that fits your architectural vision. Every selection auto-configures the specific rail infrastructure.</p>
-                     </div>
-                     
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
-                        <button v-for="m in (['Surface/Hanging', 'Embedded concealed', 'Batch ash track', 'Spring fixed', 'Ceiling soft film'] as MountingType[])" :key="m" @click="config.mounting = m"
-                           class="p-6 lg:p-10 border-2 rounded-[2.5rem] text-left transition-all relative overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1"
-                           :class="config.mounting === m ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 hover:border-slate-100 bg-slate-50/30' ">
-                           <div class="flex justify-between items-start mb-8">
-                              <Layers class="w-10 h-10 lg:w-16 lg:h-16 transition-transform group-hover:scale-110" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-200' "/>
-                              <div v-if="config.mounting === m" class="bg-[#2563eb] text-white p-2 rounded-full shadow-lg"><Check size="20" stroke-width="4"/></div>
-                           </div>
-                           <span class="block text-2xl lg:text-4xl font-black uppercase tracking-tighter text-slate-900">{{ m }}</span>
-                           <p class="text-[10px] font-bold text-slate-400 uppercase mt-4 tracking-widest">Protocol Series Applied</p>
-                           <div v-if="m.includes('concealed') || m.includes('ash') || m.includes('Spring')" 
-                              class="mt-6 p-4 bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase rounded-2xl border border-amber-100 italic flex items-center gap-3">
-                              <AlertTriangle size="14"/> 開槽尺寸: 22-25mm
-                           </div>
-                        </button>
-                     </div>
-                  </div>
+          <!-- Main Interaction Pane -->
+          <main class="flex-1 bg-white text-slate-900 overflow-y-auto p-4 lg:p-20 relative z-20 print:hidden transition-all pb-32 lg:pb-20 scrollbar-hide">
+             <div class="max-w-5xl mx-auto flex flex-col min-h-full">
+                
+                <header class="hidden lg:flex justify-between items-center text-slate-300 font-mono text-[10px] uppercase tracking-[0.5em] mb-12">
+                   <span class="flex items-center gap-2">SYS:{{ config.mounting.split(' ')[0].toUpperCase() }}_PROTO</span>
+                   <div class="h-[1px] flex-1 mx-10 bg-slate-100 rounded-full overflow-hidden">
+                      <div class="h-full bg-[#2563eb] transition-all duration-1000" :style="`width: ${((step+1)/steps.length)*100}%` "></div>
+                   </div>
+                   <span class="text-slate-900 font-bold">{{ step + 1 }} / {{ steps.length }}</span>
+                </header>
 
-                  <div v-if="step === 1" class="space-y-12">
-                     <div class="max-w-2xl">
-                        <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-6">Select <br/><span class="italic font-serif font-light text-slate-400">Topology</span></h2>
-                        <p class="text-base lg:text-xl text-slate-500 font-medium leading-relaxed">Determine the layout architecture. Required corner modules and joint connectors will be calculated automatically.</p>
-                     </div>
-                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
-                        <button v-for="l in (['Straight', 'L-Shape', 'T-Shape', 'Rectangle'] as LayoutType[])" :key="l" @click="config.layout = l"
-                           class="p-6 lg:p-8 border-2 rounded-[3rem] flex items-center gap-6 lg:gap-10 transition-all hover:bg-slate-50 hover:border-slate-200"
-                           :class="config.layout === l ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 bg-slate-50/30' ">
-                           <div class="w-16 h-16 lg:w-24 lg:h-24 bg-white rounded-3xl flex items-center justify-center shrink-0 border border-slate-100 shadow-sm relative overflow-hidden">
-                              <LayoutIcon class="relative z-10 transition-colors" :class="config.layout === l ? 'text-[#2563eb]' : 'text-slate-300'" size="32" />
-                              <div v-if="config.layout === l" class="absolute inset-0 bg-blue-50/50 animate-pulse"></div>
-                           </div>
-                           <div class="text-left">
-                              <span class="block text-xl lg:text-3xl font-black uppercase tracking-tighter text-slate-900">{{ l }}</span>
-                              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Smart Topology Mapping</p>
-                           </div>
-                        </button>
-                     </div>
-                  </div>
+                <Transition name="slide" mode="out-in">
+                   <div :key="step" class="flex-1">
+                      
+                      <div v-if="step === 0" class="space-y-8 lg:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                         <div class="max-w-2xl">
+                            <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-6">Discovery <br/><span class="italic font-serif font-light text-slate-400">Environment</span></h2>
+                         </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
+                            <button v-for="m in (['Surface/Hanging', 'Embedded concealed', 'Batch ash track', 'Spring fixed', 'Ceiling soft film'] as MountingType[])" :key="m" @click="config.mounting = m"
+                               class="p-6 lg:p-10 border-2 rounded-[2.5rem] text-left transition-all relative overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1"
+                               :class="config.mounting === m ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 hover:border-slate-100 bg-slate-50/30' ">
+                               <Layers class="w-10 h-10 lg:w-16 lg:h-16 mb-10 transition-transform group-hover:scale-110" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-200' "/>
+                               <span class="block text-2xl lg:text-4xl font-black uppercase tracking-tighter text-slate-900">{{ m }}</span>
+                               <div v-if="m.includes('concealed') || m.includes('ash') || m.includes('Spring')" class="mt-4 text-amber-600 text-[10px] font-bold uppercase italic flex items-center gap-2"><AlertTriangle size="12"/> 22-25mm Slot</div>
+                            </button>
+                         </div>
+                      </div>
 
-                  <div v-if="step === 2" class="space-y-12 py-10 lg:py-20 text-center bg-slate-50/40 rounded-[4rem] border border-slate-100 shadow-inner px-6">
-                     <h2 class="text-3xl lg:text-5xl font-black tracking-tighter text-slate-900 mb-6 uppercase">System Dimension</h2>
-                     <div class="text-[80px] lg:text-[180px] font-thin text-slate-900 tabular-nums leading-none tracking-tighter italic font-serif flex items-center justify-center">
-                        {{ config.totalLength }}<span class="text-2xl lg:text-4xl font-black text-[#2563eb] not-italic ml-4 lg:ml-8 mt-10 lg:mt-20">MM</span>
-                     </div>
-                     <div class="max-w-xl mx-auto px-6 lg:px-10 mt-12">
-                        <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#2563eb] h-1.5 bg-slate-200 rounded-full" />
-                        <div class="flex justify-between text-[11px] font-black uppercase text-slate-400 mt-8 tracking-[0.3em]">
-                           <span class="bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">Min 500mm</span>
-                           <span class="bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">Max 10,000mm</span>
-                        </div>
-                     </div>
-                  </div>
+                      <div v-if="step === 1" class="space-y-12">
+                         <h2 class="text-5xl lg:text-[100px] font-black tracking-tighter text-slate-900 leading-none italic font-serif mb-12">Topology.</h2>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
+                            <button v-for="l in (['Straight', 'L-Shape', 'T-Shape', 'Rectangle'] as LayoutType[])" :key="l" @click="config.layout = l"
+                               class="p-6 lg:p-8 border-2 rounded-[3rem] flex items-center gap-6 lg:gap-10 transition-all hover:bg-slate-50 hover:border-slate-200"
+                               :class="config.layout === l ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 bg-slate-50/30' ">
+                               <div class="w-16 h-16 lg:w-24 lg:h-24 bg-white rounded-3xl flex items-center justify-center shrink-0 border border-slate-100 shadow-sm relative overflow-hidden">
+                                  <LayoutIcon class="relative z-10 transition-colors" :class="config.layout === l ? 'text-[#2563eb]' : 'text-slate-300'" size="32" />
+                               </div>
+                               <span class="text-xl lg:text-3xl font-black uppercase tracking-tighter text-slate-900">{{ l }}</span>
+                            </button>
+                         </div>
+                      </div>
 
-                  <div v-if="step === 3" class="space-y-12">
-                     <header class="flex flex-col lg:flex-row lg:justify-between lg:items-end border-b border-slate-100 pb-10 mb-8 gap-4">
-                        <div>
-                           <h2 class="text-5xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none">The <span class="text-[#2563eb]">Modules</span></h2>
-                           <p class="text-slate-500 font-medium mt-4 text-lg">Select magnetic luminaires to integrate into your track configuration.</p>
-                        </div>
-                        <div v-if="config.selectedLuminaires.length === 0" class="bg-rose-50 text-rose-500 px-6 py-3 rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-3 self-start animate-bounce border border-rose-100">
-                           <AlertTriangle size="14"/> Selection Required
-                        </div>
-                     </header>
+                      <div v-if="step === 2" class="space-y-12 py-10 lg:py-20 text-center bg-slate-50/40 rounded-[4rem] border border-slate-100 shadow-inner px-6">
+                         <div class="text-[80px] lg:text-[180px] font-thin text-slate-900 tabular-nums leading-none tracking-tighter italic font-serif">
+                            {{ config.totalLength }}<span class="text-2xl lg:text-4xl font-black text-[#2563eb] not-italic ml-4 inline-block -translate-y-8">MM</span>
+                         </div>
+                         <div class="max-w-xl mx-auto px-6 lg:px-10 mt-12">
+                            <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#2563eb] h-1.5 bg-slate-200 rounded-full" />
+                         </div>
+                      </div>
 
-                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 transition-all">
-                        <div v-for="lamp in data.lamps" :key="lamp.model" class="p-4 lg:p-8 border border-slate-100 rounded-[3rem] bg-white transition-all hover:shadow-2xl hover:border-[#2563eb]/20 group shadow-sm">
-                           <div class="aspect-[4/3] lg:aspect-square bg-slate-50 rounded-[2.5rem] overflow-hidden mb-6 lg:mb-8 relative border border-slate-50/50 group-hover:bg-blue-50/30 transition-colors">
-                              <img :src="fixDriveUrl(lamp.photo)" @error="e=>(e.target as any).style.opacity='0.1'" class="w-full h-full object-contain p-8 lg:p-12 transition-transform duration-700 group-hover:scale-105" />
-                              <button @click="showSpecs = lamp" class="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-full shadow-lg text-slate-400 hover:text-[#2563eb] hover:bg-white transition-all"><Info size="18"/></button>
-                           </div>
-                           <div class="px-2">
-                              <div class="flex justify-between items-start mb-2">
-                                 <h3 class="text-xl lg:text-2xl font-black uppercase tracking-tighter text-slate-900">{{ safeUpper(lamp.model) }}</h3>
-                                 <span class="text-lg font-mono font-black italic text-[#2563eb]">£{{ lamp.price }}</span>
-                              </div>
-                              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">{{ lamp.power }}W Precision Optic</p>
-                              
-                              <div class="flex items-center justify-between p-2 bg-slate-50 rounded-full border border-slate-100 group-hover:bg-white transition-colors">
-                                 <button @click="updateLamp(lamp, -1)" 
-                                    class="w-12 h-12 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-900 hover:bg-slate-200 transition-all">
-                                    <Minus size="18"/>
-                                 </button>
-                                 <span class="text-3xl font-mono font-black italic text-slate-900">{{ getQty(lamp.model) }}</span>
-                                 <button @click="updateLamp(lamp, 1)" 
-                                    class="w-12 h-12 flex items-center justify-center rounded-full bg-[#0f172a] text-white hover:bg-[#2563eb] shadow-lg transition-all">
-                                    <Plus size="18"/>
-                                 </button>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
+                      <div v-if="step === 3" class="space-y-12">
+                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-8 transition-all">
+                            <div v-for="lamp in data.lamps" :key="lamp.model" class="p-4 lg:p-8 border border-slate-100 rounded-[3rem] bg-white shadow-sm hover:shadow-2xl transition-all">
+                               <div class="aspect-[4/3] bg-slate-50 rounded-[2.5rem] overflow-hidden mb-8 relative">
+                                  <img :src="fixDriveUrl(lamp.photo)" class="w-full h-full object-contain p-8 lg:p-12 transition-transform duration-700 hover:scale-105" />
+                                  <button @click="showSpecs = lamp" class="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-full text-slate-400 hover:text-[#2563eb] shadow-xl transition-all"><Info size="18"/></button>
+                               </div>
+                               <div class="px-2">
+                                  <div class="flex justify-between items-start mb-2">
+                                     <h3 class="text-xl lg:text-2xl font-black uppercase tracking-tighter text-slate-900">{{ safeUpper(lamp.model) }}</h3>
+                                     <span class="text-lg font-mono font-black italic text-[#2563eb]">£{{ lamp.price }}</span>
+                                  </div>
+                                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">{{ lamp.power }}W Engineering Module</p>
+                                  <div class="flex items-center justify-between p-2 bg-slate-50 rounded-full border border-slate-100">
+                                     <button @click="updateLamp(lamp, -1)" class="w-12 h-12 flex items-center justify-center rounded-full text-slate-300 hover:text-slate-900 hover:bg-slate-200 transition-all"><Minus size="18"/></button>
+                                     <span class="text-3xl font-mono font-black italic text-slate-900">{{ getQty(lamp.model) }}</span>
+                                     <button @click="updateLamp(lamp, 1)" class="w-12 h-12 flex items-center justify-center rounded-full bg-[#0f172a] text-white hover:bg-[#2563eb] shadow-lg transition-all"><Plus size="18"/></button>
+                                  </div>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
 
-                  <div v-if="step === 4" class="space-y-12">
-                     <h2 class="text-7xl font-black italic font-serif text-slate-900 tracking-tighter mb-16">Final Technical Spec</h2>
-                     <div class="divide-y divide-slate-50 border-t border-slate-50">
-                        <div v-for="(item, i) in generatedBOM" :key="i" class="py-8 flex items-center gap-12 group">
-                           <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center p-2 shrink-0 border border-slate-100 group-hover:bg-white transition-colors">
-                              <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain mix-blend-multiply" @error="e=>(e.target as any).style.display='none'"/>
-                              <Package v-else class="text-slate-100" />
-                           </div>
-                           <div class="flex-1">
-                              <div class="flex items-center gap-3 mb-1">
-                                <p class="text-lg font-black uppercase italic font-serif leading-none">{{ safeUpper(item.model) }}</p>
-                                <span v-if="item.alert" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-bold uppercase rounded-md">{{ item.alert }}</span>
-                              </div>
-                              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">{{ item.category }} | {{ item.description }}</p>
-                              <div v-if="item.specs" class="flex gap-4 mt-2">
-                                <span v-for="(v, k) in item.specs" :key="k" class="text-[9px] font-mono text-slate-400">[{{ k }}: {{ v }}]</span>
-                              </div>
-                           </div>
-                           <span class="text-4xl font-mono font-black italic text-slate-100 uppercase transition-colors group-hover:text-[#2563eb]">x{{ item.quantity }}</span>
-                        </div>
-                     </div>
-                  </div>
+                      <div v-if="step === 4" class="space-y-12 animate-in slide-in-from-bottom-10 duration-700">
+                         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10 mb-12">
+                            <h2 class="text-6xl lg:text-[100px] font-black italic font-serif text-[#0f172a] tracking-tighter leading-none mb-0">The <span class="text-[#2563eb]">BOM</span>.</h2>
+                            <div class="bg-blue-50 text-[#2563eb] px-10 py-5 rounded-[2rem] border border-blue-100">
+                               <p class="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">Session Identification</p>
+                               <span class="text-lg font-mono font-black italic">ACO-{{ Date.now().toString(36).toUpperCase() }}</span>
+                            </div>
+                         </div>
 
+                         <!-- High-Density BOM Architecture (REFINED) -->
+                         <div class="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-xl">
+                            <table class="w-full text-left border-collapse">
+                               <thead class="bg-slate-50/50 border-b border-slate-100">
+                                  <tr class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
+                                     <th class="py-6 px-10">Ref</th>
+                                     <th class="py-6 px-10">Engineering Component</th>
+                                     <th class="py-6 px-10 text-center">Qty</th>
+                                     <th class="py-6 px-10 text-right">Net Subtotal</th>
+                                  </tr>
+                               </thead>
+                               <tbody>
+                                  <tr v-for="(item, i) in generatedBOM" :key="i" class="border-b border-slate-50 last:border-0 hover:bg-slate-50/30 transition-colors group">
+                                     <td class="py-6 px-10">
+                                        <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center p-2 group-hover:bg-white transition-colors border border-slate-50">
+                                           <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain mix-blend-multiply"/>
+                                           <Package v-else class="text-slate-200" size="20"/>
+                                        </div>
+                                     </td>
+                                     <td class="py-6 px-10">
+                                        <div class="flex items-center gap-3 mb-1">
+                                           <span class="text-sm font-black text-[#0f172a] uppercase tracking-tighter">{{ safeUpper(item.model) }}</span>
+                                           <span v-if="item.alert" class="bg-amber-100 text-amber-700 text-[7px] font-black uppercase px-2 py-0.5 rounded italic">{{ item.alert }}</span>
+                                        </div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ item.description }}</p>
+                                     </td>
+                                     <td class="py-6 px-10 text-center">
+                                        <span class="text-2xl font-mono font-black italic text-slate-100 group-hover:text-slate-900 transition-colors">x{{ item.quantity }}</span>
+                                     </td>
+                                     <td class="py-6 px-10 text-right">
+                                        <span class="text-lg font-mono font-black italic text-[#2563eb]">£{{ (item.price * item.quantity).toLocaleString() }}</span>
+                                     </td>
+                                  </tr>
+                               </tbody>
+                            </table>
+                         </div>
+                      </div>
 
-               </div>
-            </Transition>
+                   </div>
+                </Transition>
 
-            <footer class="mt-auto pt-16 border-t border-slate-100 flex justify-between items-center">
-               <button @click="step--" v-if="step > 0" class="flex gap-3 items-center text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-all"><ChevronLeft size="20"/> Return</button>
-               <div v-else></div>
-               <div class="flex gap-4">
-                  <button v-if="step < 4" @click="step++" :disabled="step === 3 && config.selectedLuminaires.length === 0"
-                     class="px-16 py-6 bg-[#0f172a] text-white rounded-full flex gap-4 items-center font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl hover:bg-[#2563eb] disabled:opacity-5 transition-all shadow-[#0f172a]/20">
-                     Next Stage <ChevronRight size="20"/>
-                  </button>
-                  <button v-else @click="window.print()" class="px-20 py-6 bg-[#2563eb] text-white rounded-full flex gap-5 items-center font-black uppercase tracking-[0.4em] text-[11px] shadow-3xl hover:shadow-blue-500/50 transition-all active:scale-95">
-                     <Download size="20"/> Export B2B Proposal
-                  </button>
-               </div>
-            </footer>
-         </div>
-      </main>
+                <footer class="mt-auto pt-16 border-t border-slate-100 flex justify-between items-center">
+                   <button @click="step--" v-if="step > 0" class="flex gap-3 items-center text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-all"><ChevronLeft size="20"/> Return</button>
+                   <div v-else></div>
+                   <div class="flex gap-4">
+                      <button v-if="step < 4" @click="step++" :disabled="step === 3 && config.selectedLuminaires.length === 0"
+                         class="px-16 py-6 bg-[#0f172a] text-white rounded-full flex gap-4 items-center font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl hover:bg-[#2563eb] disabled:opacity-5 transition-all shadow-[#0f172a]/20">
+                         Proceed <ChevronRight size="20"/>
+                      </button>
+                      <button v-else @click="window.print()" class="px-20 py-6 bg-[#2563eb] text-white rounded-full flex gap-5 items-center font-black uppercase tracking-[0.4em] text-[11px] shadow-3xl hover:shadow-blue-500/50 transition-all active:scale-95">
+                         <Download size="20"/> Export B2B Proposal
+                      </button>
+                   </div>
+                </footer>
+             </div>
+          </main>
 
-      <!-- Price Bar (Mobile Only Style) -->
-      <div v-if="step < 4" class="lg:hidden fixed bottom-6 left-6 right-6 z-[100] animate-in slide-in-from-bottom-10">
-         <div class="bg-[#0f172a] text-white p-4 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex justify-between items-center border border-white/10 backdrop-blur-xl">
-            <div>
-               <p class="text-[8px] font-black uppercase text-white/40 tracking-widest">Running Total</p>
-               <span class="text-2xl font-mono font-black italic">£{{ totalPrice.toLocaleString() }}</span>
-            </div>
-            <button @click="step++" :disabled="step === 3 && config.selectedLuminaires.length === 0"
-               class="px-8 py-3 bg-[#2563eb] rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-30">
-               Next <ChevronRight size="16"/>
-            </button>
-         </div>
-      </div>
+          <!-- Right Pane: Summary Workspace (Desktop 32%) -->
+          <aside v-if="!loading" class="hidden xl:flex w-[32%] bg-slate-50/50 border-l border-slate-100 p-12 flex-col h-screen sticky top-0 shrink-0 print:hidden overflow-hidden">
+             <div class="flex justify-between items-center mb-12">
+                <div>
+                   <h4 class="text-[12px] font-black uppercase tracking-[0.4em] text-slate-900">Live Analysis</h4>
+                   <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">S10 Engineering Core</p>
+                </div>
+                <Compass class="text-slate-300" size="24"/>
+             </div>
 
-      <!-- Right Pane: Summary Workspace (Desktop 32%) -->
-      <aside v-if="!loading" class="hidden xl:flex w-[32%] bg-slate-50/50 border-l border-slate-100 p-12 flex-col h-screen sticky top-0 shrink-0 print:hidden overflow-hidden">
-         <div class="flex justify-between items-center mb-12">
-            <div>
-               <h4 class="text-[12px] font-black uppercase tracking-[0.4em] text-slate-900">Config Summary</h4>
-               <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">S10 Magnetic Ecosystem</p>
-            </div>
-            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm"><Layers size="16" class="text-slate-400"/></div>
-         </div>
+             <div class="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                <div v-for="(item, i) in generatedBOM" :key="i" class="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm transition-all hover:translate-x-2">
+                   <div class="w-12 h-12 bg-slate-50 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center p-1">
+                      <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain" />
+                   </div>
+                   <div class="flex-1 min-w-0">
+                      <div class="flex justify-between items-baseline">
+                         <span class="text-[10px] font-black uppercase text-slate-900 truncate">{{ safeUpper(item.model) }}</span>
+                         <span class="text-xs font-mono font-black italic text-[#2563eb]">x{{ item.quantity }}</span>
+                      </div>
+                      <p class="text-[7px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 truncate">{{ item.description }}</p>
+                   </div>
+                </div>
+             </div>
 
-         <div class="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-            <div v-if="generatedBOM.length === 0" class="h-full flex flex-col items-center justify-center p-20 text-center opacity-10">
-               <Zap size="80" class="text-slate-900"/>
-               <p class="text-[10px] uppercase font-black tracking-[0.4em] mt-8 italic">Specify Rails to begin</p>
-            </div>
-            <div v-for="(item, i) in generatedBOM" :key="i" class="flex gap-4 items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm animate-in slide-in-from-right-10 duration-500">
-               <div class="w-12 h-12 bg-slate-50 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center p-1">
-                  <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain" />
-               </div>
-               <div class="flex-1 min-w-0">
-                  <div class="flex justify-between items-baseline">
-                     <span class="text-[11px] font-black uppercase text-slate-900 truncate">{{ safeUpper(item.model) }}</span>
-                     <span class="text-xs font-mono font-black italic text-[#2563eb]">x{{ item.quantity }}</span>
-                  </div>
-                  <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5 truncate">{{ item.description }}</p>
-               </div>
-            </div>
-         </div>
+             <div class="mt-12 bg-[#0f172a] rounded-[3.5rem] p-10 text-white relative overflow-hidden group shadow-3xl">
+                <div class="relative z-10">
+                   <div class="space-y-4 mb-10">
+                      <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5 pb-3">
+                         <span>Technical Verification</span>
+                         <span class="text-emerald-400 flex items-center gap-2"><ShieldCheck size="12"/> Active</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <p class="text-[7px] font-black uppercase text-white/20 mb-1">Max Capacity</p>
+                            <p class="text-[10px] font-mono font-bold" :class="isOverloaded ? 'text-red-400' : 'text-white' ">{{ currentLoad.toFixed(0) }}W / 160W</p>
+                         </div>
+                      </div>
+                   </div>
+                   <div class="flex justify-between items-end">
+                      <div>
+                        <p class="text-[10px] font-black uppercase text-white/40 mb-2">Estimated Investment</p>
+                        <div class="text-6xl font-black tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString() }}</div>
+                      </div>
+                      <button @click="window.print()" class="p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all"><ArrowUpRight size="20"/></button>
+                   </div>
+                </div>
+             </div>
+          </aside>
+       </div>
 
-         <div class="mt-12 bg-[#0f172a] rounded-[3.5rem] p-10 text-white relative overflow-hidden group shadow-3xl">
-            <div class="absolute inset-0 bg-[#2563eb] translate-y-[101%] group-hover:translate-y-0 transition-transform duration-700 z-0 opacity-10"></div>
-            <div class="relative z-10">
-               <!-- Sales Validation View -->
-               <div class="space-y-4 mb-10">
-                  <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5 pb-3">
-                     <span>Technical Verification</span>
-                     <span class="text-emerald-400 flex items-center gap-2"><ShieldCheck size="12"/> Active</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                     <div>
-                        <p class="text-[7px] font-black uppercase text-white/20 mb-1">Max Capacity</p>
-                        <p class="text-[10px] font-mono font-bold" :class="isOverloaded ? 'text-red-400' : 'text-white' ">{{ currentLoad.toFixed(0) }}W / 160W</p>
-                     </div>
-                     <div class="text-right">
-                        <p class="text-[7px] font-black uppercase text-white/20 mb-1">Parts Count</p>
-                        <p class="text-[10px] font-mono font-bold">{{ generatedBOM.reduce((a,c)=>a+c.quantity, 0) }} SKUs</p>
-                     </div>
-                  </div>
-               </div>
+       <!-- Global Footer -->
+       <footer class="bg-[#0f172a] text-white py-24 px-6 lg:px-20 print:hidden relative overflow-hidden">
+          <div class="absolute -right-20 -bottom-40 text-[300px] font-black text-white/5 italic font-serif select-none pointer-events-none uppercase">S10</div>
+          <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 relative z-10">
+             <div class="space-y-8">
+                <div @click="navigate('LANDING')" class="flex flex-col cursor-pointer">
+                   <h1 class="text-3xl font-black tracking-tighter text-white font-serif italic leading-none">ACO<span class="text-[#2563eb] font-sans not-italic">fusion</span></h1>
+                   <p class="text-[10px] font-black uppercase tracking-[0.6em] text-white/30 mt-2">Global Lighting Intelligence</p>
+                </div>
+                <p class="text-slate-400 font-medium leading-relaxed max-w-xs">Precision magnetic track systems engineered for the highest architectural demands.</p>
+                <div class="flex items-center gap-6">
+                   <a href="#" class="text-white/40 hover:text-white transition-colors"><Instagram size="20"/></a>
+                   <a href="#" class="text-white/40 hover:text-white transition-colors"><Facebook size="20"/></a>
+                   <a href="#" class="text-white/40 hover:text-white transition-colors"><Linkedin size="20"/></a>
+                </div>
+             </div>
 
-               <div v-if="isOverloaded" class="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-[9px] font-black uppercase italic text-red-400 leading-relaxed">
-                  ⚠️ Power Budget Exceeded. <br/>Consider adding a second feed unit.
-               </div>
+             <div class="space-y-8">
+                <h5 class="text-[12px] font-black uppercase tracking-[0.5em] text-white/20">Legal & Technical</h5>
+                <nav class="flex flex-col gap-4">
+                   <a v-for="l in ['General Conditions', 'Privacy Policy', 'Architectural Specs', 'S10 Manuals']" :key="l" href="#" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#2563eb] transition-all">{{ l }}</a>
+                </nav>
+             </div>
 
-               <div class="flex justify-between items-end">
-                  <div>
-                    <p class="text-[10px] font-black uppercase text-white/40 mb-2">Estimated Investment</p>
-                    <div class="text-6xl font-black tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString() }}</div>
-                  </div>
-                  <ChevronRight class="mb-2 text-white/20 group-hover:translate-x-2 transition-transform" size="32"/>
-               </div>
-            </div>
-         </div>
-      </aside>
+             <div class="space-y-8">
+                <h5 class="text-[12px] font-black uppercase tracking-[0.5em] text-white/20">UK / Europe Contact</h5>
+                <div class="space-y-4">
+                   <p class="text-[11px] font-black uppercase tracking-widest text-[#2563eb]">Director: James Tsai</p>
+                   <p class="text-lg font-bold flex items-center gap-3"><Smartphone size="18"/> +44-7510-317-505</p>
+                   <p class="text-[10px] font-medium text-slate-400">UK Office Liaison</p>
+                </div>
+             </div>
 
+             <div class="space-y-8">
+                <h5 class="text-[12px] font-black uppercase tracking-[0.5em] text-white/20">Global Support</h5>
+                <div class="space-y-6">
+                   <a href="mailto:service@acofusion.com" class="text-lg font-bold block hover:text-[#2563eb] transition-colors leading-none">service@acofusion.com</a>
+                   <a href="https://wa.me/447510317505" target="_blank" class="inline-flex items-center gap-4 px-8 py-4 bg-emerald-600 rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl">
+                      <MessageCircle size="20"/> Direct WhatsApp
+                   </a>
+                   <p class="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em]">Response Time: &lt; 2hrs</p>
+                </div>
+             </div>
+          </div>
+          
+          <div class="max-w-7xl mx-auto pt-20 mt-20 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6">
+             <p class="text-[10px] font-black uppercase tracking-[0.5em] text-white/20 text-center sm:text-left">© 2026 ACOFUSION LIGHTING. ALL RIGHTS RESERVED. REGISTERED IN UK.</p>
+             <p class="text-[10px] font-black uppercase tracking-[0.5em] text-[#2563eb] text-center sm:text-right italic">Light is the fourth dimension of architecture.</p>
+          </div>
+       </footer>
     </div>
 
     <!-- Technical Details Portal (Modal) -->
+
     <Transition name="fade">
       <div v-if="showSpecs" class="fixed inset-0 z-[600] flex items-center justify-center p-8 lg:p-24 bg-slate-900/98 backdrop-blur-3xl" @click="showSpecs = null">
         <div class="bg-white max-w-7xl w-full flex flex-col md:flex-row rounded-[4rem] overflow-hidden h-[85vh] shadow-[0_0_150px_rgba(0,0,0,0.6)]" @click.stop>
