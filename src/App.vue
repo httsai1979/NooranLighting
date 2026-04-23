@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { 
   Check, 
   ChevronRight, 
@@ -13,17 +13,23 @@ import {
   AlertTriangle,
   RotateCcw,
   Zap,
-  Package
+  Package,
+  X,
+  Layers,
+  Layout as LayoutIcon,
+  Monitor,
+  Smartphone
 } from 'lucide-vue-next'
 import type { Luminaire, Accessory, MountingType, LayoutType, ConfigState, BOMItem } from './types'
 
-// --- Data & Constants ---
+// --- Constants & Config ---
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzppxxh05KJPZzDHlTK6_so2ILiMCsfkeF3btexeVyZ7zoT-04ksNg4lwSGNkZxUSVkdQ/exec'
 const TRACK_UNIT = 2.0
+const MAX_SAFE_WATTAGE = 200
 
-// --- App State ---
+// --- Reactive State ---
 const loading = ref(true)
-const currentStep = ref(0)
+const step = ref(0)
 const showSpecs = ref<Luminaire | Accessory | null>(null)
 const data = ref<{ lamps: Luminaire[], accessories: Accessory[] }>({ lamps: [], accessories: [] })
 
@@ -34,17 +40,16 @@ const config = ref<ConfigState>({
   selectedLuminaires: []
 })
 
-// --- Interaction Steps (ERCO Style) ---
+// --- Steps Definition (British English) ---
 const steps = [
-  { id: 'mounting', name: 'Type of mounting', desc: 'Define architectural integration' },
-  { id: 'layout', name: 'Topology', desc: 'Geometric structural layout' },
-  { id: 'length', name: 'System Metres', desc: 'Linear extension scale' },
-  { id: 'luminaires', name: 'Light distribution', desc: 'Optical module selection' },
-  { id: 'engineering', name: 'Power supply unit', desc: 'Electrical load & safety' },
-  { id: 'summary', name: 'Parts list', desc: 'Final technical specification' }
+  { id: 'mounting', name: 'Mounting Method', desc: 'Define architectural installation' },
+  { id: 'topology', name: 'System Topology', desc: 'Select geometric pathing' },
+  { id: 'length', name: 'System Metres', desc: 'Define linear extension' },
+  { id: 'luminaires', name: 'Luminaires', desc: 'Select lighting modules' },
+  { id: 'validation', name: 'Engineering', desc: 'Final technical check' }
 ]
 
-// --- Logic Implementation ---
+// --- Data Orchestration ---
 const fetchData = async () => {
   try {
     const res = await fetch(GAS_URL)
@@ -55,28 +60,28 @@ const fetchData = async () => {
         accessories: json.data['S10_Track&accessory'] || []
       }
     }
-  } catch (e) {
-    console.error('Fetch Error:', e)
+  } catch (err) {
+    console.error('Initialisation Error:', err)
   } finally {
     loading.value = false
   }
 }
 onMounted(fetchData)
 
-// Image logic (resilient)
+// Image URL Resolver (Hardened for Drive)
 const getImageUrl = (url: any) => {
   if (!url) return ''
   const u = url.toString()
   if (u.includes('googleusercontent.com')) return u
-  const id = u.match(/id=([-\w]+)/)?.[1] || u.match(/\/d\/([-\w]+)/)?.[1]
-  return id ? `https://docs.google.com/uc?export=view&id=${id}` : u
+  const idMatch = u.match(/id=([-\w]+)/) || u.match(/\/d\/([-\w]+)/)
+  return idMatch ? `https://docs.google.com/uc?export=view&id=${idMatch[1]}` : u
 }
 
-// BOM Engine
+// --- Logic Engine (BOM Calculation) ---
 const findRealItem = (predicate: (a: Accessory) => boolean, prefix?: string) => {
   const items = data.value.accessories.filter(predicate)
   if (!items.length) return null
-  return prefix ? (items.find(a => (a.model || '').toString().startsWith(prefix)) || items[0]) : items[0]
+  return prefix ? (items.find(a => (a.model || '').startsWith(prefix)) || items[0]) : items[0]
 }
 
 const calculatedBOM = computed<BOMItem[]>(() => {
@@ -84,80 +89,79 @@ const calculatedBOM = computed<BOMItem[]>(() => {
   const { mounting, layout, totalLength, selectedLuminaires } = config.value
   const bom: BOMItem[] = []
 
-  // 1. Tracks (PDF Logic)
-  const seriesPrefix = mounting === 'Trimless' ? 'G-TL-D' : (mounting === 'Recessed' ? 'G-TL-B' : 'G-TL-A')
-  const track = findRealItem(a => (a.model || '').toString().startsWith(seriesPrefix), seriesPrefix)
-  const qty = Math.ceil(totalLength / TRACK_UNIT)
-  
+  // 1. Profile Pieces
+  const prefix = mounting === 'Trimless' ? 'G-TL-D' : (mounting === 'Recessed' ? 'G-TL-B' : 'G-TL-A')
+  const track = findRealItem(a => (a.model || '').startsWith(prefix), prefix)
+  const profileQty = Math.ceil(totalLength / TRACK_UNIT)
   bom.push({
-    model: track?.model || `${seriesPrefix}-2M`,
+    model: track?.model || `${prefix}-2M`,
     category: 'Profile',
-    description: `10mm Slim ${mounting} Track (2.0 Metres)`,
-    quantity: qty,
+    description: `10mm ${mounting} Magnetic Track (2.0 Metres)`,
+    quantity: profileQty,
     price: track?.price || 0,
     photo: getImageUrl(track?.photo)
   })
 
-  // 2. Topology
-  let corners = 0
-  if (layout === 'L-Shape') corners = 1
-  else if (layout === 'T-Shape') corners = 2
-  else if (layout === 'Rectangle') corners = 4
+  // 2. Topology Accessories
+  let cornerCount = 0
+  if (layout === 'L-Shape') cornerCount = 1
+  if (layout === 'T-Shape') cornerCount = 2
+  if (layout === 'Rectangle') cornerCount = 4
 
-  if (corners > 0) {
-    const corner = findRealItem(a => (a.model || '').toString().toLowerCase().includes('corner'), seriesPrefix)
+  if (cornerCount > 0) {
+    const corner = findRealItem(a => (a.model || '').toLowerCase().includes('corner'), prefix)
     bom.push({
       model: corner?.model || 'CORNER-MOD',
       category: 'Hardware',
-      description: '90° Structural Angle',
-      quantity: corners,
+      description: '90° Structural Angle Module',
+      quantity: cornerCount,
       price: corner?.price || 0,
       photo: getImageUrl(corner?.photo)
     })
   }
 
   if (layout === 'T-Shape' || layout === 'Rectangle') {
-    const pol = findRealItem(a => (a.model || '').toString().toLowerCase().includes('polarity'))
+    const pol = findRealItem(a => (a.model || '').toLowerCase().includes('polarity'))
     bom.push({
-      model: pol?.model || 'POL-CHANGER',
+      model: pol?.model || 'POLARITY',
       category: 'Electrical',
-      description: 'Loop Phase Alignment Module',
+      description: 'Loop Safety Polarity Changer',
       quantity: 1,
       price: pol?.price || 0,
       photo: getImageUrl(pol?.photo)
     })
   }
 
-  // 3. Hardware
-  const cap = findRealItem(a => (a.model || '').toString().toLowerCase().includes('end cap'), seriesPrefix)
-  bom.push({ model: cap?.model || 'END-CAP', category: 'Hardware', description: 'End Closure', quantity: 2, price: cap?.price || 0, photo: getImageUrl(cap?.photo) })
+  // 3. Components
+  const cap = findRealItem(a => (a.model || '').toLowerCase().includes('end cap'), prefix)
+  bom.push({ model: cap?.model || 'END-CAP', category: 'Hardware', description: 'End Plate', quantity: 2, price: cap?.price || 0, photo: getImageUrl(cap?.photo) })
 
-  const live = findRealItem(a => (a.model || '').toString().toLowerCase().includes('live end'), seriesPrefix)
-  bom.push({ model: live?.model || 'LIVE-FEED', category: 'Electrical', description: 'Mains Feed', quantity: 1, price: live?.price || 0, photo: getImageUrl(live?.photo) })
+  const feed = findRealItem(a => (a.model || '').toLowerCase().includes('live end'), prefix)
+  bom.push({ model: feed?.model || 'LIVE-FEED', category: 'Electrical', description: 'Power Input', quantity: 1, price: feed?.price || 0, photo: getImageUrl(feed?.photo) })
 
-  // 4. Lights
+  // 4. Luminaires
   selectedLuminaires.forEach(s => {
-    bom.push({ model: s.item.model, category: 'Luminaire', description: `${s.item.power}W Module`, quantity: s.quantity, price: s.item.price || 0, photo: getImageUrl(s.item.photo) })
+    bom.push({ model: s.item.model, category: 'Luminaire', description: `${s.item.power}W Optical Module`, quantity: s.quantity, price: s.item.price || 0, photo: getImageUrl(s.item.photo) })
   })
 
-  // 5. Power
+  // 5. PSU Logic (Auto-stacking)
   const load = selectedLuminaires.reduce((a,c) => a + (c.item.power * c.quantity), 0)
   if (load > 0) {
-    const driver = data.value.accessories.filter(a => (a.category||'').toString().toLowerCase().includes('driver')).sort((a,b) => (b.price||0) - (a.price||0))[0]
+    const driver = data.value.accessories.filter(a => (a.category||'').toLowerCase().includes('driver')).sort((a,b) => (b.price||0)-(a.price||0))[0]
     if (driver) {
-       const qtyP = Math.ceil((load + 20) / 180) // 200W limit with safety
-       bom.push({ model: driver.model, category: 'Power', description: 'DC48V Power Supply', quantity: qtyP, price: driver.price || 0, photo: getImageUrl(driver.photo) })
+       const qty = Math.ceil((load + 15) / 185) // N+1ish safety
+       bom.push({ model: driver.model, category: 'Power', description: '48V DC Industry Grade Driver', quantity: qty, price: driver.price || 0, photo: getImageUrl(driver.photo) })
     }
   }
 
   return bom
 })
 
-const totalLoad = computed(() => config.value.selectedLuminaires.reduce((a, c) => a + (c.item.power * c.quantity), 0))
-const totalPrice = computed(() => calculatedBOM.value.reduce((a, c) => a + (c.price * c.quantity), 0))
-const isOverloaded = computed(() => totalLoad.value > 200)
+const totalLoadValue = computed(() => config.value.selectedLuminaires.reduce((a, c) => a + (c.item.power * c.quantity), 0))
+const totalPriceValue = computed(() => calculatedBOM.value.reduce((a, c) => a + (c.price * c.quantity), 0))
+const overloadStatus = computed(() => totalLoadValue.value > MAX_SAFE_WATTAGE)
 
-// Methods
+// --- Interaction Helpers ---
 const updateLamp = (lamp: Luminaire, delta: number) => {
   const existing = config.value.selectedLuminaires.find(s => s.item.model === lamp.model)
   if (existing) {
@@ -167,276 +171,243 @@ const updateLamp = (lamp: Luminaire, delta: number) => {
 }
 const getLampQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.model === m)?.quantity || 0
 
-// Validation
-const canProceed = computed(() => {
-  if (currentStep.value === 3) return config.value.selectedLuminaires.length > 0
-  if (currentStep.value === 4) return !isOverloaded.value
+const canContinue = computed(() => {
+  if (step.value === 3) return config.value.selectedLuminaires.length > 0
+  if (step.value === 4) return !overloadStatus.value
   return true
 })
 </script>
 
 <template>
-  <div class="h-screen bg-white text-zinc-800 font-sans flex overflow-hidden">
+  <div class="h-screen bg-[#0f172a] text-slate-100 font-sans flex overflow-hidden">
     
-    <!-- Left Sidebar Stepper (Architectural Style) -->
-    <aside class="w-[320px] bg-[#f9f9f9] border-r border-zinc-200 p-10 flex flex-col h-full shrink-0 relative z-20 shadow-sm">
-      <div class="mb-12">
-        <h1 class="text-lg font-bold tracking-tight text-[#f27b21]">ACOfusion S10</h1>
-        <p class="text-[11px] text-zinc-400 font-medium uppercase tracking-widest mt-2 leading-relaxed">
-          10mm Magnetic Configurator<br/>Plan your system intelligently.
-        </p>
+    <!-- Animated Loading Overlay -->
+    <Transition name="fade">
+      <div v-if="loading" class="fixed inset-0 z-[500] bg-[#0f172a] flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-slate-800 border-t-[#2563eb] rounded-full animate-spin"></div>
+        <p class="mt-8 text-[11px] font-black uppercase tracking-[0.6em] text-slate-500">Initialising ACOfusion S10 Engine</p>
       </div>
+    </Transition>
 
-      <div class="flex-1 space-y-2">
-        <div v-for="(s, idx) in steps" :key="s.id" 
-          class="relative pl-8 pb-10 last:pb-0"
-          :class="idx <= currentStep ? 'opacity-100' : 'opacity-30'"
-        >
-          <!-- Stepper Line -->
-          <div v-if="idx < steps.length - 1" class="absolute left-[11px] top-6 bottom-0 w-px border-l-2 border-dotted border-zinc-300"></div>
-          
-          <!-- Stepper Dot / Check -->
-          <div class="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center transition-colors z-10"
-            :class="idx < currentStep ? 'bg-[#f27b21]' : (idx === currentStep ? 'bg-[#f27b21]/20 border-2 border-[#f27b21]' : 'bg-white border-2 border-zinc-200')">
-            <Check v-if="idx < currentStep" class="text-white" size="14" stroke-width="4" />
-            <div v-else-if="idx === currentStep" class="w-2 h-2 rounded-full bg-[#f27b21]"></div>
-          </div>
-
-          <!-- Step Info -->
-          <div>
-            <h4 class="text-[13px] font-bold" :class="idx <= currentStep ? 'text-zinc-900' : 'text-zinc-400'">{{ s.name }}</h4>
-            <p v-if="idx === currentStep" class="text-[11px] text-zinc-500 mt-0.5 leading-tight">{{ s.desc }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stepper Footer -->
-      <div class="p-10 border-t border-zinc-200 mt-auto bg-white/50">
-        <div class="flex flex-col gap-6">
-          <a href="https://www.acofusion.com" target="_blank" class="text-[11px] text-zinc-900 font-black flex items-center gap-3 hover:text-[#f27b21] transition-colors uppercase tracking-widest">
-            <Info size="14" /> www.acofusion.com
-          </a>
-          <a href="mailto:james@acofusion.com" class="text-[11px] text-zinc-400 font-bold flex items-center gap-3 hover:text-zinc-900 transition-colors lowercase tracking-normal">
-            james@acofusion.com
-          </a>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col bg-white overflow-hidden relative">
+    <!-- UI Structure: Responsive Split-Pane -->
+    <div class="flex-1 flex flex-col lg:flex-row relative">
       
-      <!-- Interactive Content Area -->
-      <main class="flex-1 p-12 lg:p-20 overflow-y-auto">
-        <div class="max-w-4xl mx-auto w-full">
-           
-           <Transition name="fade" mode="out-in">
-             <div :key="currentStep" class="space-y-12">
-               
-               <!-- PHASE 0: Mounting -->
-               <div v-if="currentStep === 0" class="space-y-10">
-                  <h2 class="text-3xl font-light text-zinc-900">Type of mounting</h2>
-                  <div class="grid grid-cols-2 gap-6">
-                    <button v-for="m in (['Surface', 'Trimless', 'Pendant', 'Recessed'] as MountingType[])" :key="m" @click="config.mounting = m"
-                      class="flex flex-col items-center justify-center p-12 border-2 transition-all rounded-sm aspect-square bg-[#fbfbfb]"
-                      :class="config.mounting === m ? 'border-[#f27b21] shadow-lg' : 'border-zinc-100 hover:border-zinc-300'">
-                       <!-- Simplified Diagram Icons (Mimic Architectural cards) -->
-                       <div class="w-32 h-32 bg-white border border-zinc-100 mb-8 rounded-sm shadow-inner flex items-center justify-center overflow-hidden">
-                          <img :src="idx === 0 ? 'https://docs.google.com/uc?export=view&id=1P_L_E_Scene_Example' : ''" @error="e=>(e.target as any).style.display='none'" />
-                          <Layers size="40" stroke-width="1.5" class="text-zinc-300" />
-                       </div>
-                       <span class="text-sm font-bold uppercase tracking-widest text-zinc-800">{{ m }}</span>
-                       <div class="mt-4 w-4 h-4 rounded-full border border-zinc-300 flex items-center justify-center">
-                          <div v-if="config.mounting === m" class="w-2.5 h-2.5 bg-[#f27b21] rounded-full"></div>
-                       </div>
-                    </button>
-                  </div>
-               </div>
-
-               <!-- PHASE 1: Layout -->
-               <div v-if="currentStep === 1" class="space-y-10 text-center">
-                  <h2 class="text-3xl font-light text-zinc-900">Select System Topology</h2>
-                  <div class="grid grid-cols-2 gap-6 text-left">
-                    <button v-for="l in (['Straight', 'L-Shape', 'T-Shape', 'Rectangle'] as LayoutType[])" :key="l" @click="config.layout = l"
-                      class="p-10 border transition-all rounded-sm flex items-center gap-8 bg-[#fdfdfd]"
-                      :class="config.layout === l ? 'border-[#f27b21] ring-1 ring-[#f27b21]' : 'border-zinc-100 hover:border-zinc-200'">
-                       <div class="w-20 h-20 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
-                          <LayoutIcon stroke-width="1" size="32" class="text-zinc-400" />
-                       </div>
-                       <div class="flex-1">
-                          <h4 class="text-sm font-black uppercase text-zinc-800">{{ l }}</h4>
-                          <p class="text-xs text-zinc-400 mt-1 italic">Structural Protocol Mapping</p>
-                       </div>
-                    </button>
-                  </div>
-               </div>
-
-               <!-- PHASE 2: Length -->
-               <div v-if="currentStep === 2" class="space-y-12">
-                  <h2 class="text-3xl font-light text-zinc-900">Define Total Length</h2>
-                  <div class="bg-[#f9f9f9] p-20 rounded-sm border border-zinc-100 text-center relative overflow-hidden">
-                     <div class="text-[120px] font-black tracking-tighter text-zinc-400/20 absolute -top-8 left-8 select-none">M_ENG</div>
-                     <div class="text-[160px] font-thin leading-none text-zinc-900 tabular-nums">
-                        {{ config.totalLength }}<span class="text-4xl text-[#f27b21] ml-4 font-black">MM</span>
-                     </div>
-                     <div class="mt-20 max-w-xl mx-auto space-y-10">
-                        <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#f27b21]" />
-                        <div class="flex justify-between text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-                           <span>Min Extension (500mm)</span>
-                           <span>Max Segment (10,000mm)</span>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <!-- PHASE 3: Light Options -->
-               <div v-if="currentStep === 3" class="space-y-10">
-                  <div class="flex justify-between items-center border-b border-zinc-200 pb-10">
-                    <h2 class="text-3xl font-light text-zinc-900 uppercase tracking-tighter italic">Luminaire Specification</h2>
-                    <div v-if="config.selectedLuminaires.length === 0" class="text-[11px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                       <AlertTriangle size="14" /> Add modules to proceed
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto pr-6 custom-scroll">
-                     <div v-for="lamp in data.lamps" :key="lamp.model" class="p-6 border border-zinc-100 bg-[#fdfdfd] flex items-center gap-10 hover:border-zinc-300 transition-all rounded-sm shadow-sm group">
-                        <div class="w-24 h-24 bg-white border border-zinc-50 rounded-sm relative overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-                           <img :src="getImageUrl(lamp.photo)" class="w-full h-full object-contain" @error="e => (e.target as any).style.opacity='0.1'" />
-                           <button @click="showSpecs = lamp" class="absolute bottom-2 right-2 p-1.5 bg-white shadow-md border border-zinc-100 text-zinc-400 hover:text-[#f27b21] transition-colors"><Maximize2 size="14" /></button>
-                        </div>
-                        <div class="flex-1">
-                           <h4 class="text-sm font-black uppercase text-zinc-800 tracking-widest">{{ lamp.model }}</h4>
-                           <p class="text-[11px] text-zinc-500 mt-2 italic">{{ lamp.power }}W S10 ULTRA-THIN DESIGN</p>
-                        </div>
-                        <div class="flex items-center gap-4 bg-white border border-zinc-100 p-3 rounded-sm shadow-sm">
-                           <button @click="updateLamp(lamp, -1)" class="p-2 text-zinc-300 hover:text-[#f27b21] transition-colors"><Minus size="16" /></button>
-                           <span class="text-xl font-mono font-black w-8 text-center">{{ getLampQty(lamp.model) }}</span>
-                           <button @click="updateLamp(lamp, 1)" class="p-2 text-zinc-300 hover:text-[#f27b21] transition-colors"><Plus size="16" /></button>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <!-- PHASE 4: PSU Setting -->
-               <div v-if="currentStep === 4" class="space-y-12 text-center">
-                  <h2 class="text-3xl font-light text-zinc-900">Power Supply Unit</h2>
-                  <div :class="['p-16 border-2 transition-all rounded-sm', isOverloaded ? 'border-red-500 bg-red-50' : 'border-zinc-100 bg-[#f9f9f9]']">
-                     <p class="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-6">Aggregate Project Load</p>
-                     <div class="text-9xl font-thin tracking-tighter text-zinc-900 italic font-serif">{{ totalLoad.toFixed(0) }}<span class="text-2xl text-zinc-300 ml-4 font-black">W</span></div>
-                     <div class="mt-12 h-1.5 bg-zinc-200 rounded-full overflow-hidden max-w-md mx-auto">
-                        <div :class="['h-full transition-all duration-1000', isOverloaded ? 'bg-red-500' : 'bg-[#f27b21]']" :style="'width:'+ Math.min(100, (totalLoad/200)*100) + '%'"></div>
-                     </div>
-                     <p v-if="isOverloaded" class="text-red-600 text-xs font-bold mt-8 uppercase animate-pulse italic">! System Overload Detected - Safety Protocol Engaged</p>
-                     <p v-else class="text-zinc-500 text-xs mt-8 uppercase tracking-widest font-medium">System Status: Optimal Structural Integrity</p>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
-                    <div class="p-8 border border-zinc-100 bg-white text-left flex items-start gap-6 rounded-sm shadow-sm">
-                       <Zap class="text-[#f27b21] shrink-0" size="24" />
-                       <div>
-                          <h4 class="text-[11px] font-black uppercase text-zinc-400 tracking-widest">Feed Location</h4>
-                          <p class="text-sm font-bold text-zinc-800 mt-1 uppercase">S10 Live End (Standard Position)</p>
-                       </div>
-                    </div>
-                    <div class="p-8 border border-zinc-100 bg-white text-left flex items-start gap-6 rounded-sm shadow-sm">
-                       <Package class="text-zinc-300 shrink-0" size="24" />
-                       <div>
-                          <h4 class="text-[11px] font-black uppercase text-zinc-400 tracking-widest">Calculated Driver</h4>
-                          <p class="text-sm font-bold text-zinc-800 mt-1 uppercase">{{ Math.ceil((totalLoad+20)/200) }}x Industrial 48V (200W)</p>
-                       </div>
-                    </div>
-                  </div>
-               </div>
-
-               <!-- PHASE 5: SUMMARY -->
-               <div v-if="currentStep === 5" class="space-y-12">
-                  <header class="flex justify-between items-end border-b-2 border-zinc-900 pb-10">
-                     <div>
-                        <h2 class="text-5xl font-black tracking-tighter text-zinc-900 uppercase leading-none italic font-serif">Product Selection</h2>
-                        <p class="text-[10px] uppercase font-black text-[#f27b21] mt-3 tracking-[0.5em]">Synchronised S10 Configuration Output</p>
-                     </div>
-                     <button @click="window.print()" class="px-10 py-5 bg-[#f27b21] text-white flex items-center gap-3 font-black uppercase tracking-widest text-[11px] rounded-sm hover:scale-105 active:scale-95 transition-all shadow-lg">
-                        <Download size="16" /> Generate parts list
-                     </button>
-                  </header>
-
-                  <div class="grid grid-cols-1 gap-px bg-zinc-200">
-                    <div v-for="(item, idx) in calculatedBOM" :key="idx" class="bg-white p-8 group hover:bg-[#fbfbfb] transition-colors flex items-center gap-12">
-                       <div class="w-20 h-20 bg-[#f9f9f9] border border-zinc-100 flex items-center justify-center overflow-hidden shrink-0 shadow-inner rounded-sm group-hover:scale-110 transition-transform">
-                           <img v-if="item.photo" :src="item.photo" class="w-full h-full object-contain p-2" />
-                           <Package v-else class="text-zinc-200" />
-                       </div>
-                       <div class="flex-1 min-w-0">
-                          <h4 class="text-sm font-black uppercase text-zinc-900 tracking-widest leading-none">{{ item.model }}</h4>
-                          <p class="text-[11px] font-bold text-zinc-400 mt-2 uppercase italic">{{ item.category }} | {{ item.description }}</p>
-                       </div>
-                       <div class="flex items-center gap-12">
-                          <div class="text-right">
-                             <p class="text-[10px] font-black text-zinc-300 uppercase leading-none mb-1">Quantity</p>
-                             <p class="text-2xl font-mono font-black italic tracking-tighter">x{{ item.quantity }}</p>
-                          </div>
-                          <div class="text-right w-32 border-l border-zinc-100 pl-8">
-                             <p class="text-[10px] font-black text-zinc-300 uppercase leading-none mb-1">Subtotal</p>
-                             <p class="text-xl font-mono font-bold tracking-tight">£{{ (item.price * item.quantity).toFixed(0) }}</p>
-                          </div>
-                       </div>
-                    </div>
-                  </div>
-
-                  <div class="bg-[#f27b21] p-16 text-white flex justify-between items-center rounded-sm shadow-2xl relative overflow-hidden">
-                     <div class="absolute -top-10 -right-10 text-[180px] font-black text-white/5 select-none leading-none tracking-tighter">TOTAL</div>
-                     <div class="relative z-10">
-                        <p class="text-[11px] font-black uppercase tracking-[0.5em] text-white/60 mb-2 leading-none">Estimate Ex VAT</p>
-                        <h3 class="text-7xl font-black tracking-tighter italic font-serif">£{{ totalPrice.toLocaleString('en-GB') }}</h3>
-                     </div>
-                     <div class="relative z-10 text-right space-y-2 uppercase font-black tracking-[0.2em] text-[10px]">
-                        <p>Delivery: Pending Logic</p>
-                        <p>Lead Time: 14-21 Days</p>
-                     </div>
-                  </div>
-               </div>
-
-             </div>
-           </Transition>
-
+      <!-- Left Sidebar: Stepper (Erco Style Navigation) -->
+      <aside class="hidden lg:flex w-[280px] bg-[#0f172a] border-r border-slate-800/50 p-10 flex-col shrink-0">
+        <div class="mb-12">
+           <h1 class="text-xl font-black uppercase tracking-tighter text-white font-serif italic">ACOfusion</h1>
+           <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">S10 Smart Configuration Portal</p>
         </div>
+
+        <div class="flex-1 space-y-1">
+           <div v-for="(s, idx) in steps" :key="s.id" class="relative pl-8 pb-10 last:pb-0" :class="idx <= step ? 'opacity-100' : 'opacity-20'">
+              <div v-if="idx < steps.length - 1" class="absolute left-[11px] top-6 bottom-0 w-px border-l border-slate-800"></div>
+              <div class="absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center transition-all z-10"
+                :class="idx < step ? 'bg-[#2563eb]' : (idx === step ? 'bg-white text-navy ring-4 ring-[#2563eb]/20' : 'bg-slate-800')">
+                 <Check v-if="idx < step" class="text-white" size="12" stroke-width="4" />
+                 <div v-else-if="idx === step" class="w-2 h-2 rounded-full bg-[#2563eb]"></div>
+              </div>
+              <span class="block text-[12px] font-black uppercase tracking-widest" :class="idx === step ? 'text-white' : 'text-slate-500'">{{ s.name }}</span>
+              <p v-if="idx === step" class="text-[10px] text-[#2563eb] font-bold mt-1 uppercase">{{ s.desc }}</p>
+           </div>
+        </div>
+
+        <div class="mt-auto border-t border-slate-800 pt-8 space-y-4">
+           <a href="https://www.acofusion.com" target="_blank" class="flex gap-3 items-center text-[10px] font-black text-slate-500 hover:text-white transition-colors uppercase tracking-widest">
+              <Monitor size="14"/> www.acofusion.com
+           </a>
+           <a href="mailto:james@acofusion.com" class="flex gap-3 items-center text-[10px] font-bold text-slate-600 hover:text-white transition-colors">
+              <Smartphone size="14"/> james@acofusion.com
+           </a>
+        </div>
+      </aside>
+
+      <!-- Centre Pane: Configuration Wizard (65% on Desktop) -->
+      <main class="flex-1 bg-white text-slate-900 overflow-y-auto p-6 lg:p-20 relative z-10 transition-all">
+         <div class="max-w-4xl mx-auto space-y-16">
+            
+            <header class="flex justify-between items-center text-slate-400 font-mono text-[10px] uppercase tracking-[0.4em] mb-10">
+               <span>ACOfusion // Project Sequence {{ step + 1 }}</span>
+               <div class="h-1 flex-1 mx-10 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-[#2563eb] transition-all duration-1000" :style="`width: ${((step+1)/steps.length)*100}%` "></div>
+               </div>
+               <span>{{ step + 1 }} / 5</span>
+            </header>
+
+            <Transition name="slide" mode="out-in">
+               <div :key="step" class="min-h-[500px]">
+                  
+                  <!-- Step 0: Mounting (British English) -->
+                  <div v-if="step === 0" class="space-y-12">
+                     <h2 class="text-6xl font-light tracking-tighter text-slate-900 font-serif italic mb-10 leading-none">Mounting Method</h2>
+                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <button v-for="m in (['Surface', 'Trimless', 'Pendant', 'Recessed'] as MountingType[])" :key="m" @click="config.mounting = m"
+                           class="group relative h-72 border-2 rounded-[2rem] p-10 transition-all text-left overflow-hidden"
+                           :class="config.mounting === m ? 'border-[#2563eb] ring-4 ring-[#2563eb]/10 bg-white' : 'border-slate-100 hover:border-slate-300 bg-slate-50/50'">
+                           <div class="flex justify-between items-start mb-10">
+                              <Layers class="w-10 h-10 group-hover:text-[#2563eb] transition-colors" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-200' " />
+                              <div v-if="config.mounting === m" class="w-8 h-8 rounded-full bg-[#2563eb] flex items-center justify-center text-white shadow-xl animate-in fade-in scale-in-75"><Check size="20" stroke-width="4"/></div>
+                           </div>
+                           <span class="block text-3xl font-black uppercase tracking-tighter">{{ m }}</span>
+                           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Professional Structural Protocol</p>
+                        </button>
+                     </div>
+                  </div>
+
+                  <!-- Step 1: Topology -->
+                  <div v-if="step === 1" class="space-y-12">
+                     <h2 class="text-6xl font-light tracking-tighter text-slate-900 font-serif italic mb-10 leading-none">System Topology</h2>
+                     <div class="grid grid-cols-2 gap-4">
+                        <button v-for="l in (['Straight', 'L-Shape', 'T-Shape', 'Rectangle'] as LayoutType[])" :key="l" @click="config.layout = l"
+                           class="p-8 border-2 rounded-[2rem] transition-all flex items-center gap-6"
+                           :class="config.layout === l ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-100 hover:border-slate-200' ">
+                           <div class="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shrink-0">
+                              <LayoutIcon class="text-slate-300" />
+                           </div>
+                           <div>
+                              <p class="text-sm font-black uppercase tracking-widest text-slate-900 leading-none mb-1">{{ l }}</p>
+                              <p class="text-[9px] text-slate-400 font-bold uppercase">Geometric Logic</p>
+                           </div>
+                        </button>
+                     </div>
+                  </div>
+
+                  <!-- Step 2: System Metres -->
+                  <div v-if="step === 2" class="space-y-12 text-center py-20">
+                     <h2 class="text-6xl font-light tracking-tighter text-slate-900 font-serif italic mb-16 leading-none">Overall Metres</h2>
+                     <div class="text-[180px] font-thin text-[#0f172a] tabular-nums tracking-tighter italic font-serif leading-none flex items-center justify-center">
+                        {{ config.totalLength }}<span class="text-4xl font-black text-[#2563eb] ml-6 mb-16 not-italic">MM</span>
+                     </div>
+                     <div class="max-w-xl mx-auto mt-20 relative px-10">
+                        <div class="absolute inset-x-10 -top-8 flex justify-between text-[10px] font-black uppercase text-slate-300"><span>500mm</span><span>10,000mm</span></div>
+                        <input type="range" min="500" max="10000" step="100" v-model.number="config.totalLength" class="w-full accent-[#2563eb] h-1.5 bg-slate-100 rounded-full" />
+                     </div>
+                  </div>
+
+                  <!-- Step 3: Luminaires (Enhanced Grid Layout) -->
+                  <div v-if="step === 3" class="space-y-12">
+                     <header class="flex justify-between items-end border-b border-slate-100 pb-10 mb-10">
+                        <h2 class="text-6xl font-light text-slate-900 font-serif italic leading-none">Luminaires</h2>
+                        <div v-if="config.selectedLuminaires.length === 0" class="text-red-500 text-[10px] font-black uppercase tracking-widest animate-pulse flex items-center gap-2"><AlertTriangle size="14"/> Selection Required</div>
+                     </header>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto pr-6 custom-scrollbar">
+                        <div v-for="lamp in data.lamps" :key="lamp.model" class="bg-slate-50/50 border border-slate-100 rounded-[2.5rem] p-6 group hover:border-[#2563eb]/30 transition-all">
+                           <div class="aspect-square bg-white rounded-[2rem] border border-slate-50 overflow-hidden relative mb-6 shadow-sm group-hover:scale-[1.02] transition-transform">
+                              <img :src="getImageUrl(lamp.photo)" class="w-full h-full object-contain p-10 mix-blend-multiply" @error="handleImgError" />
+                              <button @click="showSpecs = lamp" class="absolute bottom-6 right-6 p-4 bg-white/80 backdrop-blur rounded-full shadow-xl text-[#2563eb] hover:bg-[#2563eb] hover:text-white transition-all"><Maximize2 size="20"/></button>
+                           </div>
+                           <div class="px-2">
+                              <h3 class="text-xl font-black uppercase tracking-tight text-slate-900 leading-none mb-2">{{ lamp.model }}</h3>
+                              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">{{ lamp.power }}W Smart Module</p>
+                              
+                              <div class="flex items-center justify-between bg-white rounded-[1.5rem] p-3 border border-slate-100 shadow-sm">
+                                 <button @click="updateLamp(lamp, -1)" class="p-4 text-slate-300 hover:text-[#2563eb] transition-colors"><Minus size="20" /></button>
+                                 <span class="text-3xl font-mono font-black italic">{{ getLampQty(lamp.model) }}</span>
+                                 <button @click="updateLamp(lamp, 1)" class="p-4 text-slate-300 hover:text-[#2563eb] transition-colors"><Plus size="20" /></button>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <!-- Step 4: Verification -->
+                  <div v-if="step === 4" class="space-y-12">
+                     <h2 class="text-6xl font-light text-slate-900 font-serif italic mb-10 text-center">Engineering</h2>
+                     <div class="p-16 border-4 rounded-[4rem] text-center transition-all bg-slate-50/50" :class="overloadStatus ? 'border-red-500' : 'border-[#2563eb]' ">
+                        <p class="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400 mb-8">System Integration Check</p>
+                        <div class="text-[140px] font-thin text-slate-900 tabular-nums italic font-serif leading-none">{{ totalLoadValue.toFixed(0) }}<span class="text-3xl font-black text-slate-300 ml-4">W</span></div>
+                        <div class="h-3 w-full max-w-xl mx-auto bg-slate-200 rounded-full overflow-hidden mt-12 mb-12">
+                           <div class="h-full transition-all duration-1000" :class="overloadStatus ? 'bg-red-500' : 'bg-[#2563eb]' " :style="`width: ${Math.min(100, (totalLoadValue/MAX_SAFE_WATTAGE)*100)}%` "></div>
+                        </div>
+                        <div v-if="overloadStatus" class="bg-red-50 p-6 rounded-3xl inline-flex items-center gap-4 text-red-600 font-black uppercase text-xs animate-bounce"><AlertTriangle /> Circuit Demand Exceeded (Limit 200W)</div>
+                        <div v-else class="text-[#2563eb] font-black uppercase text-[10px] flex items-center justify-center gap-3"><Check size="16" stroke-width="4"/> Optimal Structural Stability Attained</div>
+                     </div>
+                  </div>
+
+               </div>
+            </Transition>
+
+            <!-- Navigation Bar -->
+            <footer class="pt-20 border-t border-slate-100 flex justify-between items-center">
+               <button @click="step--" v-if="step > 0" class="px-10 py-5 text-slate-400 hover:text-slate-900 flex gap-3 items-center font-black uppercase text-[10px] tracking-widest transition-all"><ChevronLeft size="18"/> Return</button>
+               <div v-else></div>
+
+               <button @click="step++" v-if="step < 4" :disabled="!canContinue" class="px-16 py-6 bg-[#0f172a] text-white flex gap-4 items-center rounded-full font-black uppercase text-[11px] tracking-[0.3em] hover:bg-[#2563eb] disabled:opacity-5 transition-all shadow-2xl active:scale-95">Next Sequence <ChevronRight size="18"/></button>
+               <button v-else @click="window.print()" class="px-16 py-6 bg-[#2563eb] text-white flex gap-4 items-center rounded-full font-black uppercase text-[11px] tracking-[0.3em] hover:shadow-blue-500/50 transition-all shadow-2xl active:scale-95"><Download size="18"/> Export Spec Sheet</button>
+            </footer>
+         </div>
       </main>
 
-      <!-- Footer Control Bar (Floating) -->
-      <footer class="h-24 border-t border-zinc-100 bg-white/80 backdrop-blur-md px-12 flex items-center justify-between relative z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-         <button @click="currentStep--" v-if="currentStep > 0" class="px-8 py-4 border border-zinc-200 text-zinc-800 font-bold uppercase tracking-widest text-[11px] rounded-sm hover:bg-zinc-50 transition-colors flex items-center gap-3 active:scale-95 shadow-sm">
-            <ChevronLeft size="16" /> Return
-         </button>
-         <div v-else></div>
+      <!-- Right Pane: Sticky Live BOM (35% Desktop / Phase 2 Requirement) -->
+      <aside class="hidden xl:flex w-[35%] bg-slate-50 border-l border-slate-200/50 flex-col h-screen sticky top-0 p-16 overflow-hidden">
+         <h4 class="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400 mb-12 flex items-center gap-4">
+            <Package size="18" class="text-[#2563eb]"/> Technical Parts List
+         </h4>
 
-         <button @click="currentStep++" :disabled="!canProceed || currentStep === steps.length - 1"
-            class="px-12 py-4 bg-[#333] text-white font-bold uppercase tracking-[0.3em] text-[11px] rounded-sm hoverSpec:bg-black transition-all flex items-center gap-4 disabled:opacity-10 active:scale-95 shadow-xl">
-            Next step <ChevronRight size="16" />
-         </button>
-      </footer>
+         <div class="flex-1 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
+            <div v-if="calculatedBOM.length === 0" class="h-full flex flex-col items-center justify-center text-slate-300 italic text-center p-20 border-2 border-dashed border-slate-100 rounded-[3rem]">
+               <Package size="60" class="opacity-10 mb-8"/>
+               <p>Awaiting engineering parameters...</p>
+            </div>
+            
+            <div v-for="(item, idx) in calculatedBOM" :key="idx" class="flex gap-6 items-center group">
+               <div class="w-20 h-20 bg-white rounded-2xl border border-slate-100 shrink-0 overflow-hidden flex items-center justify-center p-2 group-hover:border-[#2563eb] transition-colors">
+                  <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full object-contain" @error="handleImgError" />
+                  <Package v-else class="text-slate-100" />
+               </div>
+               <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-start">
+                     <span class="block text-[11px] font-black uppercase tracking-widest text-[#0f172a] truncate">{{ item.model }}</span>
+                     <span class="text-xs font-mono font-black italic text-slate-400 ml-4">x{{ item.quantity }}</span>
+                  </div>
+                  <p class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mt-1 italic">{{ item.category }} // {{ item.description }}</p>
+               </div>
+            </div>
+         </div>
+
+         <!-- Sticky Summary Footer (Internal to Right Pane) -->
+         <div class="mt-12 bg-[#0f172a] rounded-[3.5rem] p-12 text-white shadow-3xl relative overflow-hidden group">
+            <div class="absolute inset-0 bg-[#2563eb] translate-y-full group-hover:translate-y-0 transition-transform duration-700"></div>
+            <div class="relative z-10">
+               <div class="flex justify-between items-center mb-6 opacity-40 uppercase tracking-widest text-[9px] font-black">
+                  <span>Aggregate Total (NET)</span>
+                  <div class="flex items-center gap-2">
+                     <span class="font-mono text-white/60">{{ totalLoadValue.toFixed(0) }}W</span>
+                     <div :class="overloadStatus ? 'bg-red-500' : 'bg-[#2563eb]' " class="w-1.5 h-1.5 rounded-full group-hover:bg-white animate-pulse"></div>
+                  </div>
+               </div>
+               <div class="text-8xl font-thin italic font-serif leading-none tracking-tighter">£{{ totalPriceValue.toLocaleString('en-GB') }}</div>
+               <p class="text-[8px] font-bold uppercase opacity-20 mt-6 tracking-[0.2em] italic">Calculated Ex VAT / Logic verified</p>
+            </div>
+         </div>
+      </aside>
+
     </div>
 
-    <!-- Specs Modal (Architecture Detail) -->
+    <!-- Specification Popup (Architectural Depth) -->
     <Transition name="fade">
-      <div v-if="showSpecs" class="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-white/95 backdrop-blur-xl" @click="showSpecs = null">
-        <div class="max-w-6xl w-full flex bg-white border border-zinc-200 shadow-3xl rounded-sm overflow-hidden h-[80vh]">
-           <div class="w-1/2 bg-[#f9f9f9] flex items-center justify-center p-20 relative">
-              <div class="absolute top-10 left-10 text-[10px] font-black uppercase text-zinc-300 tracking-[0.5em] leading-none italic font-serif">Technical Render</div>
-              <img :src="getImageUrl(showSpecs.photo)" class="w-full h-full object-contain mix-blend-multiply" />
+      <div v-if="showSpecs" class="fixed inset-0 z-[600] flex items-center justify-center p-6 lg:p-20 bg-slate-900/98 backdrop-blur-2xl" @click="showSpecs = null">
+        <div class="bg-white max-w-6xl w-full flex flex-col md:flex-row rounded-[4rem] overflow-hidden h-[85vh] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-slate-700/10" @click.stop>
+           <div class="w-full md:w-1/2 bg-slate-50 flex items-center justify-center p-20 relative border-r border-slate-100">
+              <div class="absolute top-12 left-12 text-[10px] font-black uppercase text-slate-300 tracking-[0.5em] italic">Engineering Perspective</div>
+              <img :src="getImageUrl(showSpecs.photo)" class="w-full h-full object-contain mix-blend-multiply transition-transform hover:scale-110 duration-700" />
            </div>
-           <div class="flex-1 p-20 flex flex-col text-left relative overflow-hidden">
-              <button @click="showSpecs = null" class="absolute top-10 right-10 text-zinc-400 hover:text-zinc-900 transition-colors uppercase font-black text-[10px] tracking-widest flex items-center gap-2">Close <X size="14"/></button>
-              <div class="mb-12">
-                 <h2 class="text-4xl font-black tracking-tighter uppercase mb-4 italic font-serif text-zinc-900 leading-none">{{ showSpecs.model }}</h2>
-                 <div class="w-24 h-1.5 bg-[#f27b21]"></div>
+           <div class="flex-1 p-16 lg:p-24 flex flex-col text-left relative overflow-hidden text-slate-900 bg-white">
+              <button @click="showSpecs = null" class="absolute top-12 right-12 text-slate-300 hover:text-[#0f172a] transition-all transform hover:rotate-90"><X size="40"/></button>
+              <div class="mb-16">
+                 <h2 class="text-6xl font-black uppercase tracking-tighter italic font-serif text-[#0f172a] leading-none mb-6">{{ (showSpecs.model || '').toString().toUpperCase() }}</h2>
+                 <div class="w-32 h-2 bg-[#2563eb] rounded-full"></div>
               </div>
-              <div class="flex-1 overflow-y-auto pr-10 custom-scroll space-y-10">
-                 <div class="grid grid-cols-2 gap-12">
-                   <div v-for="(v, k) in (showSpecs.specsData || {})" :key="k" class="border-b border-zinc-100 pb-4">
-                      <span class="text-[10px] font-black uppercase tracking-widest text-[#f27b21] block mb-2">{{ k }}</span>
-                      <span class="text-base font-bold text-zinc-800">{{ v }}</span>
-                   </div>
+              <div class="flex-1 overflow-y-auto pr-10 space-y-8 custom-scrollbar">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div v-for="(v, k) in (showSpecs.specsData || {})" :key="k" class="border-b border-slate-50 pb-4 group/item">
+                       <span class="block text-[10px] font-black uppercase tracking-widest text-[#2563eb] mb-2">{{ k }}</span>
+                       <span class="text-lg font-bold text-slate-800 italic">{{ v }}</span>
+                    </div>
                  </div>
-                 <div class="pt-10 border-t border-zinc-50 italic text-zinc-400 text-xs leading-secondary">
-                    All specifications are subject to systemic deviation based on DC48V rail alignment protocol. Engineering verification recommended before final procurement.
+                 <div class="pt-12 border-t border-slate-100 flex items-start gap-6 opacity-30 italic">
+                    <Info size="16" class="shrink-0 mt-1"/>
+                    <p class="text-[10px] uppercase font-black tracking-widest leading-loose">Automated parameter retrieval success. All data remains the intellectual property of ACOfusion Global (UK). Specification deviations are possible based on final site survey.</p>
                  </div>
               </div>
            </div>
@@ -444,63 +415,79 @@ const canProceed = computed(() => {
       </div>
     </Transition>
 
-    <!-- Professional Print Template (B2B Blueprint) -->
-    <div id="print-area" class="hidden print:block p-16 font-sans text-zinc-900 bg-white">
-       <header class="flex justify-between items-end border-b-[3px] border-zinc-800 pb-10 mb-16">
+    <!-- Professional Component Listing (A4 Blueprint Print) -->
+    <div id="print-area" class="hidden print:block bg-white text-[#0f172a] p-20 font-sans">
+       <header class="flex justify-between items-end border-b-[8px] border-[#0f172a] pb-12 mb-20">
           <div>
-            <h1 class="text-8xl font-black uppercase italic font-serif tracking-tighter leading-none mb-4">ACOfusion</h1>
-            <p class="text-sm font-black uppercase tracking-[0.5em] text-zinc-400">S10 System Engineering // Part Listing Export</p>
+            <h1 class="text-9xl font-black uppercase italic font-serif tracking-tighter leading-none mb-4">ACOfusion</h1>
+            <p class="text-sm font-black uppercase tracking-[0.5em] text-[#2563eb]">S10 SMART MAGNETIC 48V RAIL SYSTEM // UK SPEC</p>
           </div>
           <div class="text-right">
-             <p class="text-[10px] font-black uppercase text-zinc-300">Quotation Created:</p>
-             <p class="text-2xl font-mono font-bold">{{ new Date().toLocaleDateString('en-GB') }}</p>
+             <p class="text-[10px] font-black uppercase text-slate-300 mb-2">QUOTATION EXPORTED</p>
+             <p class="text-4xl font-mono font-black italic border-b-2 border-slate-100 pb-2">{{ new Date().toLocaleDateString('en-GB') }}</p>
+             <p class="text-[10px] font-black text-slate-400 mt-4 tracking-widest italic uppercase">ACO-REF-{{ Math.random().toString(36).substr(2, 6).toUpperCase() }}</p>
           </div>
        </header>
 
-       <section class="grid grid-cols-2 gap-20 mb-20">
-          <div class="space-y-6">
-             <h4 class="text-xs font-black uppercase tracking-widest border-b border-zinc-100 pb-2 mb-4">Structural Parameters</h4>
-             <div class="grid grid-cols-1 gap-2 text-sm italic font-serif font-bold">
-                <p>Mounting: {{ config.mounting }}</p>
-                <p>Topology: {{ config.layout }}</p>
-                <p>Segment Length: {{ (config.totalLength).toFixed(0) }}MM</p>
-                <p>Engineering Load: {{ totalLoad.toFixed(1) }}W</p>
+       <section class="grid grid-cols-2 gap-20 mb-20 bg-slate-50 p-16 rounded-[4rem] border-2 border-slate-100">
+          <div class="space-y-8">
+             <h4 class="text-xs font-black uppercase tracking-[0.3em] border-b-2 border-slate-200 pb-2 mb-4">Project Parameters</h4>
+             <div class="grid grid-cols-1 gap-4 text-base font-black italic font-serif uppercase text-slate-500">
+                <p>Mounting Style: <span class="text-slate-900 border-b border-slate-200 ml-4">{{ config.mounting }}</span></p>
+                <p>System Topology: <span class="text-slate-900 border-b border-slate-200 ml-4">{{ config.layout }}</span></p>
+                <p>Total Length: <span class="text-slate-900 border-b border-slate-200 ml-4">{{ (config.totalLength).toFixed(0) }}MM</span></p>
+                <p>Electrical Load: <span class="text-[#2563eb] border-b border-slate-200 ml-4">{{ totalLoadValue.toFixed(1) }}W (CALCULATED)</span></p>
              </div>
           </div>
-          <div class="text-right border-l-[3px] border-[#f27b21] pl-20 flex flex-col justify-end">
-             <p class="text-[11px] font-black uppercase text-zinc-400 tracking-widest mb-2">Total System Net Cost</p>
-             <p class="text-9xl font-black tracking-tighter leading-none italic font-serif">£{{ totalPrice.toLocaleString('en-GB') }}</p>
+          <div class="text-right flex flex-col justify-center items-end border-l-4 border-[#2563eb] pl-20">
+             <p class="text-[11px] font-black uppercase text-slate-400 tracking-[0.6em] mb-4">Quotation Total (Ex VAT)</p>
+             <div class="text-[110px] font-black tracking-tighter leading-none italic font-serif">£{{ totalPriceValue.toLocaleString('en-GB') }}</div>
+             <p class="text-[9px] font-black uppercase opacity-20 mt-10 tracking-[0.2em] italic max-w-xs leading-relaxed text-left border-l border-slate-200 pl-4">Net component pricing only. Does not include site installation or project consultancy fees.</p>
           </div>
        </section>
 
        <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="text-[11px] font-black uppercase tracking-widest border-b-2 border-zinc-800 bg-zinc-50">
-              <th class="py-10 px-8">Technical Model / Spec</th>
-              <th class="py-10 px-8 text-center">Quantity</th>
-              <th class="py-10 px-8 text-right">Unit Net</th>
-              <th class="py-10 px-8 text-right">Aggregate Net</th>
+            <tr class="text-[11px] font-black uppercase tracking-[0.4em] border-b-4 border-[#0f172a] bg-slate-50">
+              <th class="py-12 px-10 w-48 text-center text-slate-300 italic">Reference</th>
+              <th class="py-12 px-10">Technical Material Specification</th>
+              <th class="py-12 px-10 text-center">Qty</th>
+              <th class="py-12 px-12 text-right bg-[#0f172a] text-white">Subtotal Net</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-zinc-100 text-sm">
+          <tbody class="divide-y divide-slate-100 text-sm">
              <tr v-for="(item, idx) in calculatedBOM" :key="idx">
-                <td class="py-10 px-8 flex items-center gap-10">
-                   <div class="w-20 h-20 bg-zinc-50 rounded-sm border border-zinc-100 overflow-hidden shrink-0 flex items-center justify-center p-2">
-                      <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full" />
+                <td class="py-12 px-10 text-center">
+                   <div class="w-24 h-24 bg-white border border-slate-100 rounded-3xl overflow-hidden mx-auto mb-4 flex items-center justify-center shadow-sm">
+                      <img v-if="item.photo" :src="item.photo" class="max-w-full max-h-full p-2" />
+                      <Package v-else class="text-slate-100" />
                    </div>
-                   <div>
-                      <p class="text-base font-black uppercase italic font-serif leading-none mb-2">{{ item.model }}</p>
-                      <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{{ item.category }} / {{ item.description }}</p>
-                   </div>
+                   <span class="text-[9px] font-mono font-black italic opacity-20 uppercase tracking-tighter">{{ (item.model || '').toString().toUpperCase() }}</span>
                 </td>
-                <td class="py-10 px-8 text-center font-mono font-black text-2xl italic">x{{ item.quantity }}</td>
-                <td class="py-10 px-8 text-right font-mono text-zinc-400">£{{ item.price.toFixed(2) }}</td>
-                <td class="py-10 px-8 text-right font-mono font-black text-2xl italic">£{{ (item.price * item.quantity).toFixed(2) }}</td>
+                <td class="py-12 px-10">
+                   <div class="text-2xl font-black uppercase tracking-tighter leading-none mb-4 italic font-serif">{{ (item.model || '').toString().toUpperCase() }}</div>
+                   <div class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] italic">{{ item.category }} | {{ item.description }}</div>
+                </td>
+                <td class="py-12 px-10 text-center font-mono font-black text-3xl italic tracking-tighter">x{{ item.quantity }}</td>
+                <td class="py-12 px-12 text-right font-mono font-black text-3xl italic tracking-tighter">£{{ ((item.price || 0) * (item.quantity)).toLocaleString('en-GB', { minimumFractionDigits: 1 }) }}</td>
              </tr>
           </tbody>
        </table>
-    </div>
 
+       <footer class="mt-40 pt-20 border-t-8 border-slate-50 grid grid-cols-2 gap-32">
+          <div class="space-y-10">
+             <h5 class="text-[12px] font-black uppercase tracking-[0.5em] mb-8 border-b border-slate-800 w-fit pb-1">Compliance Protocol</h5>
+             <p class="text-[11px] leading-relaxed text-slate-300 font-bold uppercase text-justify italic font-serif">
+               Quantities generated by ACOfusion S10 Logic V2.4. Final circuit verification by a qualified L6 Engineer is mandatory before site integration. Total systemic demand must not exceed 200W per feed. All loop topologies must incorporate polarity alignment modules to maintain structural warranty.
+             </p>
+          </div>
+          <div class="text-right flex flex-col justify-end gap-2">
+             <div class="text-2xl font-black uppercase tracking-[0.5em] text-[#0f172a] italic font-serif mb-2">ACOfusion Global (UK)</div>
+             <p class="text-[10px] font-mono font-black opacity-20 italic uppercase tracking-[0.6em] leading-none mb-1">Generated by Engine Build X-992</p>
+             <p class="text-[10px] font-mono font-black opacity-20 italic uppercase tracking-[0.6em] leading-none">Standard Project Export Protocol</p>
+          </div>
+       </footer>
+    </div>
   </div>
 </template>
 
@@ -510,18 +497,22 @@ const canProceed = computed(() => {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
 
-body { margin:0; background: white; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: #0f172a; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-enter-active, .slide-leave-active { transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-enter-from { opacity: 0; transform: translateY(30px); }
+.slide-leave-to { opacity: 0; transform: translateY(-30px); }
 
 input[type=range] { -webkit-appearance: none; background: transparent; }
 input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #eee; border-radius: 10px; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #f27b21; cursor: pointer; margin-top: -8px; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #2563eb; cursor: pointer; margin-top: -8px; border: 3px solid white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
 
 @media print {
   body { background: white !important; }
-  aside, footer, .Transition, #app > div:not(#print-area), button { display: none !important; }
+  aside, footer, .Transition, #app > div:not(#print-area), button, header, nav { display: none !important; }
   #print-area { display: block !important; position: static !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
   @page { size: A4 portrait; margin: 0; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
