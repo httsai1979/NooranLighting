@@ -25,8 +25,7 @@ import type { Luminaire, Accessory, MountingType, LayoutType, ConfigState, BOMIt
 // --- System Configuration ---
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzppxxh05KJPZzDHlTK6_so2ILiMCsfkeF3btexeVyZ7zoT-04ksNg4lwSGNkZxUSVkdQ/exec'
 const TRACK_UNIT_MM = 2000 
-const PSU_MAX_W = 200
-const PSU_SAFE_THRESHOLD = 0.9 // 90% utilization limit
+const PSU_MAX_W = 160 // Threshold for multi-system split
 
 // --- App State ---
 const loading = ref(true)
@@ -35,7 +34,7 @@ const showSpecs = ref<Luminaire | Accessory | null>(null)
 const data = ref<{ lamps: Luminaire[], accessories: Accessory[] }>({ lamps: [], accessories: [] })
 
 const config = ref<ConfigState>({
-  mounting: 'Surface',
+  mounting: 'Surface/Hanging',
   layout: 'Straight',
   totalLength: 2000, 
   selectedLuminaires: []
@@ -93,61 +92,82 @@ const generatedBOM = computed<BOMItem[]>(() => {
   const { mounting, layout, totalLength, selectedLuminaires } = config.value
   let items: BOMItem[] = []
 
-  // 1. Series Mapping Strategy
+  // 1. Series Mapping Strategy & Construction Alert
   let prefix = 'G-TL-A'; 
-  if (mounting === 'Trimless') prefix = 'G-TL-D';
-  if (mounting === 'Recessed') prefix = 'G-TL-B';
-  if (mounting === 'Batch Ash') prefix = 'G-TL-C';
+  let constructionAlert = '';
+  
+  if (mounting === 'Embedded concealed') {
+    prefix = 'G-TL-D-B';
+    constructionAlert = 'Construction Alert: Slot size must be 22-25mm';
+  } else if (mounting === 'Batch ash track') {
+    prefix = 'G-TL-D-C';
+    constructionAlert = 'Construction Alert: Slot size must be 22-25mm';
+  } else if (mounting === 'Spring fixed') {
+    prefix = 'G-TL-D-D';
+    constructionAlert = 'Construction Alert: Slot size must be 22-25mm';
+  } else if (mounting === 'Ceiling soft film') {
+    prefix = 'G-TL-D-E-RM';
+  }
 
   const trackQty = Math.ceil(totalLength / TRACK_UNIT_MM);
   
   if (trackQty > 0) {
     // Structural Infrastructure
-    items.push(findRealItem([prefix, '2M'], `S10 10mm ${mounting} Track (2.0m)`, 'Infrastructure', trackQty));
-    items.push(findRealItem([prefix, '-SM'], 'System End Cap', 'Hardware', 2));
-    items.push(findRealItem([prefix, '-ZJDY'], 'Internal Live Feed Module', 'Electrical', 1));
+    items.push({
+      ...findRealItem([prefix, '2M'], `S10 10mm ${mounting} Track (2.0m)`, 'Infrastructure', trackQty),
+      alert: constructionAlert
+    });
+    
+    // Rule 1: 1 Input Module and 2 End Plugs
+    items.push(findRealItem([prefix, 'DT'], 'System End Cap (Pair)', 'Accessory_Required', 2));
+    items.push(findRealItem(['G-TL-D-SRMK'], 'Internal Live Feed Module', 'Accessory_Required', 1));
   }
 
-  // 2. Topology & Polarity (Poka-yoke)
+  // 2. Topology & Accessories
   let corners = 0;
   if (layout === 'L-Shape') corners = 1;
-  else if (layout === 'T-Shape') corners = 2; // T-Shape requires 2 corners in S10 logic
+  else if (layout === 'T-Shape') corners = 2;
   else if (layout === 'Rectangle') corners = 4;
 
   if (corners > 0) {
     items.push(findRealItem([prefix, 'Corner'], '90° Structural Angle', 'Hardware', corners));
   }
 
-  if (layout === 'T-Shape' || layout === 'Rectangle') {
-    items.push(findRealItem([prefix, 'Polarity'], 'Loop Safety Phase Balancer', 'Safety', 1));
-  }
-
-  // Linear Connectors Calculation: Math.max(0, Qty - 1 - Corners)
+  // Linear Connectors Calculation
   const straightJoints = Math.max(0, trackQty - 1 - corners);
   if (straightJoints > 0) {
-    items.push(findRealItem([prefix, 'Connector'], 'Linear Splicing Module', 'Electrical', straightJoints));
+    const connectorPrefix = (mounting === 'Surface/Hanging') ? 'G-TL-A' : 'G-TL-D';
+    items.push(findRealItem([connectorPrefix, 'Connector'], 'Linear Splicing Module', 'Electrical', straightJoints));
   }
 
-  // 3. Optical Modules
+  // 3. Optical Modules with Parameter Mapping
   selectedLuminaires.forEach(sel => {
+    let beamAngle = '120°';
+    if (sel.item.model.includes('S36-1') || sel.item.model.includes('S36-2') || sel.item.model.includes('S36-3')) beamAngle = '38°';
+    else if (sel.item.model.includes('S39')) beamAngle = '24°';
+    else if (sel.item.model.includes('S43')) beamAngle = '180°';
+
     items.push({
       model: (sel.item.model || 'MODULE').toString().toUpperCase(),
       category: 'Luminaires',
-      description: `${sel.item.power}W S10 Slim Module`,
+      description: `${sel.item.power}W S10 Module (Beam: ${beamAngle})`,
       quantity: sel.quantity,
       price: sel.item.price || 0,
-      photo: fixDriveUrl(sel.item.photo)
+      photo: fixDriveUrl(sel.item.photo),
+      specs: { 'Beam Angle': beamAngle, 'Efficiency': '85lm/W' }
     });
   });
 
-  // 4. Electrical Redundancy (N+1 safety)
+  // 4. Power Load Algorithm (C)
   const totalWatts = selectedLuminaires.reduce((a, c) => a + (c.item.power * c.quantity), 0);
   if (totalWatts > 0) {
-    const maxSingleWatt = Math.max(...selectedLuminaires.map(s => s.item.power));
-    const safeCapacityNeeded = totalWatts + maxSingleWatt;
-    const psuQty = Math.ceil(safeCapacityNeeded / (PSU_MAX_W * PSU_SAFE_THRESHOLD));
-    
-    items.push(findRealItem(['Driver'], 'Industrial 48V DC Supply', 'Power', psuQty));
+    if (totalWatts < 80) {
+      items.push(findRealItem(['100W'], '48V 100W Integrated Power', 'Power_Integrated', 1));
+    } else if (totalWatts < 160) {
+      items.push(findRealItem(['200W'], '48V 200W Integrated Power', 'Power_Integrated', 1));
+    } else {
+      // Handled by isOverloaded alert in UI
+    }
   }
 
   return items;
@@ -156,8 +176,20 @@ const generatedBOM = computed<BOMItem[]>(() => {
 // Aggregate Helpers
 const currentLoad = computed(() => config.value.selectedLuminaires.reduce((a, c) => a + (c.item.power * c.quantity), 0))
 const totalPrice = computed(() => generatedBOM.value.reduce((a, c) => a + (c.price * c.quantity), 0))
-const isOverloaded = computed(() => currentLoad.value > PSU_MAX_W)
+const isOverloaded = computed(() => currentLoad.value >= 160)
 const safeUpper = (val: any) => (val || '').toString().toUpperCase()
+
+const validationStatus = computed(() => {
+  const hasInputModule = generatedBOM.value.some(i => i.model.includes('SRMK') || i.description.includes('Feed'));
+  const hasEndCaps = generatedBOM.value.find(i => i.model.includes('DT'))?.quantity >= 2;
+  const { mounting } = config.value;
+  
+  return {
+    power: currentLoad.value < 160 ? 'Optimal' : 'Caution: Overload',
+    accessories: (hasInputModule && hasEndCaps) ? 'Complete' : 'Missing Hardware',
+    mounting: mounting.includes('Surface') ? 'Surface Series' : 'Embedded Series (22-25mm)'
+  };
+});
 
 // --- Interaction UI ---
 const steps = [
@@ -240,12 +272,13 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
                   <div v-if="step === 0" class="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                      <h2 class="text-7xl font-light tracking-tighter italic font-serif leading-none">Mounting Style</h2>
                      <div class="grid grid-cols-2 gap-6">
-                        <button v-for="m in (['Surface', 'Trimless', 'Pendant', 'Recessed'] as MountingType[])" :key="m" @click="config.mounting = m"
+                        <button v-for="m in (['Surface/Hanging', 'Embedded concealed', 'Batch ash track', 'Spring fixed', 'Ceiling soft film'] as MountingType[])" :key="m" @click="config.mounting = m"
                            class="p-10 border-2 rounded-[2.5rem] text-left transition-all relative overflow-hidden"
                            :class="config.mounting === m ? 'border-[#2563eb] bg-blue-50/20' : 'border-slate-50 hover:border-slate-200' ">
                            <Layers class="mb-8 w-12 h-12" :class="config.mounting === m ? 'text-[#2563eb]' : 'text-slate-100' "/>
-                           <span class="block text-3xl font-black uppercase tracking-tighter">{{ m }}</span>
+                           <span class="block text-2xl font-black uppercase tracking-tighter">{{ m }}</span>
                            <p class="text-[10px] font-bold text-slate-400 uppercase mt-4">Series Mapping Applied</p>
+                           <div v-if="m.includes('concealed') || m.includes('ash') || m.includes('Spring')" class="mt-4 p-3 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase rounded-xl border border-amber-100 italic">開槽尺寸: 22-25mm</div>
                         </button>
                      </div>
                   </div>
@@ -307,13 +340,20 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
                               <Package v-else class="text-slate-100" />
                            </div>
                            <div class="flex-1">
-                              <p class="text-lg font-black uppercase italic font-serif leading-none mb-1">{{ safeUpper(item.model) }}</p>
+                              <div class="flex items-center gap-3 mb-1">
+                                <p class="text-lg font-black uppercase italic font-serif leading-none">{{ safeUpper(item.model) }}</p>
+                                <span v-if="item.alert" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-bold uppercase rounded-md">{{ item.alert }}</span>
+                              </div>
                               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">{{ item.category }} | {{ item.description }}</p>
+                              <div v-if="item.specs" class="flex gap-4 mt-2">
+                                <span v-for="(v, k) in item.specs" :key="k" class="text-[9px] font-mono text-slate-400">[{{ k }}: {{ v }}]</span>
+                              </div>
                            </div>
                            <span class="text-4xl font-mono font-black italic text-slate-100 uppercase transition-colors group-hover:text-[#2563eb]">x{{ item.quantity }}</span>
                         </div>
                      </div>
                   </div>
+
 
                </div>
             </Transition>
@@ -363,9 +403,25 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
             </div>
          </div>
 
-         <div class="mt-16 bg-[#0f172a] rounded-[4rem] p-12 text-white relative overflow-hidden group shadow-3xl">
+         <div class="mt-16 bg-[#0f172a] rounded-[4rem] p-10 text-white relative overflow-hidden group shadow-3xl">
             <div class="absolute inset-0 bg-[#2563eb] translate-y-full group-hover:translate-y-0 transition-transform duration-1000 z-0"></div>
             <div class="relative z-10">
+               <!-- Poka-yoke Validation -->
+               <div class="grid grid-cols-3 gap-2 mb-8 border-b border-white/10 pb-6">
+                  <div class="text-center">
+                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Load Status</p>
+                    <span :class="isOverloaded ? 'text-red-400' : 'text-emerald-400'" class="text-[9px] font-bold uppercase tracking-widest">{{ validationStatus.power }}</span>
+                  </div>
+                  <div class="text-center border-x border-white/5">
+                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Essentials</p>
+                    <span class="text-emerald-400 text-[9px] font-bold uppercase tracking-widest">{{ validationStatus.accessories }}</span>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-[7px] font-black uppercase text-white/30 mb-1">Series</p>
+                    <span class="text-blue-300 text-[9px] font-bold uppercase tracking-widest truncate block">{{ validationStatus.mounting }}</span>
+                  </div>
+               </div>
+
                <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-6 group-hover:border-white/30 transition-colors">
                   <span class="text-[10px] font-black uppercase tracking-[0.5em] text-white/50">Supply Capability Check</span>
                   <div class="flex items-center gap-3">
@@ -373,12 +429,15 @@ const getQty = (m: string) => config.value.selectedLuminaires.find(s => s.item.m
                      <div :class="isOverloaded ? 'bg-red-500 scale-150' : 'bg-[#2563eb]' " class="w-2 h-2 rounded-full transition-all group-hover:bg-white animate-pulse"></div>
                   </div>
                </div>
+               <div v-if="isOverloaded" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-2xl text-[9px] font-bold uppercase italic text-red-200">
+                  負荷超標！建議拆分為兩個或以上的獨立電源系統
+               </div>
                <div class="flex justify-between items-end">
                   <div>
                     <p class="text-[9px] font-black uppercase text-white/40 mb-2">Estimate Subtotal (Net)</p>
-                    <div class="text-[84px] font-thin tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString('en-GB') }}</div>
+                    <div class="text-[72px] font-thin tracking-tighter italic font-serif leading-none">£{{ totalPrice.toLocaleString('en-GB') }}</div>
                   </div>
-                  <ShieldCheck class="mb-2 text-white/20 group-hover:text-white" size="48"/>
+                  <ShieldCheck class="mb-2 text-white/20 group-hover:text-white" size="40"/>
                </div>
             </div>
          </div>
