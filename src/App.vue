@@ -274,9 +274,13 @@ const navigate = (view: any) => {
          <div class="w-20 h-20 border-2 border-slate-50 border-t-[#2563eb] rounded-full animate-spin"></div>
          <p class="mt-12 text-[10px] font-black uppercase tracking-[0.8em] text-slate-300 animate-pulse">Aco Innovation Protocol</p>
       </div>
-    </Transitio    <!-- Global Navigation Header -->
+    </Transition>
+
+    <!-- Global Navigation Header -->
+
     <header class="fixed top-0 left-0 right-0 z-[400] bg-white/80 backdrop-blur-xl border-b border-slate-50 px-6 lg:px-12 py-4 flex justify-between items-center">
        <div class="flex items-center gap-12">
+
           <button @click="navigate('LANDING')" class="flex flex-col cursor-pointer">
              <h1 class="text-2xl font-black tracking-tighter text-[#0f172a] font-serif italic leading-none">ACO<span class="text-[#2563eb] font-sans not-italic">fusion</span></h1>
              <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lighting Architecture</p>
@@ -803,26 +807,27 @@ const navigate = (view: any) => {
           <div class="text-right flex flex-col justify-end gap-5">
              <div class="text-5xl font-black uppercase tracking-[0.5em] text-[#0f172a] italic font-serif mb-8 leading-none">ACOfusion Global (UK) Ltd</div>
              <div class="space-y-1 opacity-20">
-               <p class="text-[11px] font-mono font-black italic uppercase tracking-[0.8em]">S10-IND-CONFIG-PROTO-UK-SPEC_v2.9.21</p>
-               <p class="text-[11px] font-mono font-black italic uppercase tracking-[0.8em]">AUTOMATED B2B ENGINEERING EXPORT SYSTEM</p>
-             </div>
-          </div>
-       </footer>
-    </div>
+                <p class="text-[11px] font-mono font-black italic uppercase tracking-[0.8em]">S10-IND-CONFIG-PROTO-UK-SPEC_v2.9.21</p>
+                <p class="text-[11px] font-mono font-black italic uppercase tracking-[0.8em]">AUTOMATED B2B ENGINEERING EXPORT SYSTEM</p>
+              </div>
+           </div>
+        </footer>
+     </div>
 
-    </div>
+     <!-- Persistent Growth & Support Module (Floating Action) -->
+     <a href="https://wa.me/447510317505" target="_blank" class="fixed bottom-10 right-10 z-[350] group flex items-center gap-6 print:hidden">
+        <div class="bg-white border border-slate-100 shadow-2xl px-6 py-4 rounded-3xl opacity-0 translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all pointer-events-none">
+           <span class="text-[10px] font-black uppercase tracking-widest text-[#0f172a]">Request Expert Quotation</span>
+           <p class="text-[9px] font-medium text-slate-400 mt-1">James Tsai | UK Technical Liaison</p>
+        </div>
+        <div class="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.4)] hover:bg-emerald-500 hover:scale-110 active:scale-95 transition-all">
+           <MessageCircle size="32" />
+           <div class="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-20 group-hover:opacity-0 transition-opacity"></div>
+        </div>
+     </a>
 
-    <!-- Persistent Growth & Support Module (Floating Action) -->
-    <a href="https://wa.me/447510317505" target="_blank" class="fixed bottom-10 right-10 z-[350] group flex items-center gap-6 print:hidden">
-       <div class="bg-white border border-slate-100 shadow-2xl px-6 py-4 rounded-3xl opacity-0 translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all pointer-events-none">
-          <span class="text-[10px] font-black uppercase tracking-widest text-[#0f172a]">Request Expert Quotation</span>
-          <p class="text-[9px] font-medium text-slate-400 mt-1">James Tsai | UK Technical Liaison</p>
-       </div>
-       <div class="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.4)] hover:bg-emerald-500 hover:scale-110 active:scale-95 transition-all">
-          <MessageCircle size="32" />
-          <div class="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-20 group-hover:opacity-0 transition-opacity"></div>
-       </div>
-    </a>
+  </div>
+</template>
 
 
 <style>
