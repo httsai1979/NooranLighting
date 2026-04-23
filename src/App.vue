@@ -280,10 +280,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
     <div class="flex flex-col lg:flex-row min-h-screen">
       
       <!-- Left Column: Configuration Wizard (Mobile First) -->
-      <div class="flex-1 p-6 lg:p-12 lg:border-r lg:border-zinc-900 overflow-y-auto">
-        
-        <!-- Header -->
-        <header class="mb-12 flex justify-between items-center">
+      <div class="flex-1 p-6 lg:p-12 lg:border-r lg:border-zinc-900 overflow-y-aut        <header class="mb-12 flex justify-between items-center">
           <div>
             <h1 class="text-xs font-black uppercase tracking-[0.5em] text-zinc-600 flex items-center gap-2">
               <span class="w-1.5 h-1.5 bg-zinc-100 rounded-full"></span>
@@ -319,7 +316,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                   <span class="text-[10px] uppercase tracking-widest text-zinc-600 mt-2 block">
                     {{ m === 'Surface' ? 'Direct Ceiling Mount' : m === 'Trimless' ? 'Flush Plasterboard Integration' : m === 'Pendant' ? 'Suspension Wire System' : 'Visible Flange Mount' }}
                   </span>
-                  <div v-if="config.mounting === m" class="absolute top-4 right-4"><CheckCircle2 size={16} /></div>
+                  <div v-if="config.mounting === m" class="absolute top-4 right-4"><CheckCircle2 size="16" /></div>
                 </button>
               </div>
             </div>
@@ -384,7 +381,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                       @click="showSpecs = lamp"
                       class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     >
-                      <Maximize2 class="text-zinc-100" size={18} />
+                      <Maximize2 class="text-zinc-100" size="18" />
                     </button>
                   </div>
                   <div class="flex-1 min-w-0">
@@ -393,9 +390,9 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                     <p class="text-xs font-mono text-zinc-100 mt-1">£{{ lamp.price }}</p>
                   </div>
                   <div class="flex items-center bg-zinc-900 rounded-lg p-1">
-                    <button @click="updateLuminaire(lamp, -1)" class="p-2 text-zinc-500 hover:text-zinc-100"><Minus size={14} /></button>
+                    <button @click="updateLuminaire(lamp, -1)" class="p-2 text-zinc-500 hover:text-zinc-100"><Minus size="14" /></button>
                     <span class="w-8 text-center font-mono text-sm leading-none">{{ getLampCount(lamp.model) }}</span>
-                    <button @click="updateLuminaire(lamp, 1)" class="p-2 text-zinc-500 hover:text-zinc-100"><Plus size={14} /></button>
+                    <button @click="updateLuminaire(lamp, 1)" class="p-2 text-zinc-500 hover:text-zinc-100"><Plus size="14" /></button>
                   </div>
                 </div>
               </div>
@@ -414,8 +411,8 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
               >
                 <div class="flex items-center gap-6">
                   <div :class="['p-5 rounded-3xl', (totalLoad || 0) > maxPossibleDriverCap ? 'bg-red-500 text-black' : 'bg-zinc-100 text-black']">
-                    <Zap v-if="(totalLoad || 0) <= maxPossibleDriverCap" />
-                    <AlertCircle v-else />
+                    <Zap v-if="(totalLoad || 0) <= maxPossibleDriverCap" size="24" />
+                    <AlertCircle v-else size="24" />
                   </div>
                   <div>
                     <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-black">Load Demand</p>
@@ -434,7 +431,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                 <div class="bg-zinc-950 p-6 rounded-2xl border border-zinc-900">
                   <p class="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Driver Requirement</p>
                   <div class="mt-4 flex items-center gap-2">
-                    <Package size={16} class="text-zinc-400" />
+                    <Package size="16" class="text-zinc-400" />
                     <span class="text-lg">{{ Math.ceil((totalLoad || 0) / (maxPossibleDriverCap * 0.9)) }}x Professional DC Power Unit</span>
                   </div>
                 </div>
@@ -452,13 +449,13 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                 <p class="text-zinc-500">Review your final S10 magnetic track configuration.</p>
               </div>
               <div class="bg-zinc-100 text-black p-12 rounded-[2.5rem] flex flex-col items-center justify-center gap-6">
-                <div class="bg-black/5 p-4 rounded-full"><CheckCircle2 size={48} class="text-black" /></div>
+                <div class="bg-black/5 p-4 rounded-full"><CheckCircle2 size="48" class="text-black" /></div>
                 <h3 class="text-3xl font-bold tracking-tight">Configuration Complete</h3>
                 <p class="text-zinc-600 max-w-sm">All components have been logically verified against the specified topology and mounting method.</p>
                 <div class="w-full h-px bg-black/10 my-4"></div>
                 <div class="flex flex-col sm:flex-row gap-4 w-full">
                   <button @click="window.print()" class="flex-1 bg-black text-white px-8 py-5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                    <Download size={20} /> Export Specification
+                    <Download size="20" /> Export Specification
                   </button>
                 </div>
               </div>
@@ -468,13 +465,13 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
         </Transition>
 
         <!-- Navigation Controls (Sticky Mobile Bottom) -->
-        <div class="mt-12 flex items-center justify-between border-t border-zinc-900 pt-8 sticky bottom-0 bg-[#09090b]/80 backdrop-blur-xl -mx-6 px-6 lg:mx-0 lg:px-0 lg:relative lg:bg-transparent lg:backdrop-blur-none">
+        <div class="mt-12 flex items-center justify-between border-t border-zinc-900 pt-8 sticky bottom-0 bg-[#09090b]/80 backdrop-blur-xl -mx-6 px-6 lg:mx-0 lg:px-0 lg:relative lg:bg-transparent lg:backdrop-blur-none" style="z-index: 10;">
           <button 
             @click="prevStep" 
             :disabled="step === 0"
             :class="['p-5 rounded-full border transition-all', step === 0 ? 'opacity-0' : 'border-zinc-800 hover:bg-zinc-900']"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size="24" />
           </button>
           
           <div class="hidden sm:flex gap-4">
@@ -491,7 +488,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
               (step === 5 || (step === 3 && config.selectedLuminaires.length === 0) || (step === 4 && isOverloaded)) ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 active:scale-95']"
           >
             <span v-if="step === 5">DONE</span>
-            <ArrowRight v-else size={24} />
+            <ArrowRight v-else size="24" />
           </button>
         </div>
       </div>
@@ -499,12 +496,12 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
       <!-- Right Column: Live BOM Summary (Desktop Only) -->
       <div class="hidden lg:flex w-[400px] xl:w-[500px] bg-black p-12 flex-col h-screen sticky top-0 border-l border-zinc-900">
         <h3 class="text-[10px] items-center gap-2 font-black uppercase tracking-[0.4em] text-zinc-600 mb-8 flex">
-          <Package size={14} /> LIVE SPECIFICATION
+          <Package size="14" /> LIVE SPECIFICATION
         </h3>
 
         <div class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
           <div v-if="calculateBOM.length === 0" class="h-full flex flex-col items-center justify-center text-zinc-800 border-2 border-dashed border-zinc-900 rounded-3xl p-12 text-center italic">
-            <Package size={48} class="mb-4 opacity-10" />
+            <Package size="48" class="mb-4 opacity-10" />
             <p class="text-sm">Initialising hardware mapping...</p>
           </div>
           
@@ -530,7 +527,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
           <div class="flex justify-between items-center mb-6">
             <span class="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">System Estimate</span>
             <div class="flex items-center gap-2">
-               <div :class="['w-2 h-2 rounded-full', totalLoad > 200 ? 'bg-red-500' : 'bg-green-500 animate-pulse']"></div>
+               <div :class="['w-2 h-2 rounded-full', (totalLoad || 0) > 200 ? 'bg-red-500' : 'bg-green-500 animate-pulse']"></div>
                <span class="text-[10px] font-bold font-mono">{{ (totalLoad || 0).toFixed(0) }}W</span>
             </div>
           </div>
@@ -547,7 +544,7 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
       <div v-if="showSpecs" class="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md" @click="showSpecs = null">
         <div class="bg-[#09090b] border border-zinc-800 rounded-[2.5rem] p-8 max-w-xl w-full relative shadow-3xl overflow-hidden" @click.stop>
           <button @click="showSpecs = null" class="absolute top-8 right-8 text-zinc-500 hover:text-white transition-colors">
-            <X size={24} />
+            <X size="24" />
           </button>
           
           <div class="flex flex-col sm:flex-row gap-8">
@@ -563,6 +560,9 @@ const getLampCount = (model: string) => config.value.selectedLuminaires.find(s =
                 </div>
                 <div v-if="!showSpecs.specsData" class="text-zinc-600 text-sm italic">Additional technical specifications derived upon order.</div>
               </div>
+            </div>
+          </div>
+v>
             </div>
           </div>
           
