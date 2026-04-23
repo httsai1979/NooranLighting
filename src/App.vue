@@ -19,7 +19,7 @@ import {
 import type { Luminaire, Accessory, MountingType, LayoutType, ConfigState, BOMItem } from './types'
 
 // --- Constants & Config ---
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2ZoLNf8m19gauKaeX_WTds-jJJzZ065SqkVHnc2Y8dhWatR5BzquNatUSm-BfzxLrbw/exec' 
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzppxxh05KJPZzDHlTK6_so2ILiMCsfkeF3btexeVyZ7zoT-04ksNg4lwSGNkZxUSVkdQ/exec' 
 const TRACK_PIECE_METRES = 2.0
 
 // --- Reactive State ---
