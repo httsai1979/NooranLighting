@@ -1,57 +1,199 @@
-# ACOfusion 10mm Smart Configurator - Technical Requirement Document (TRD)
+ACOfusion 10mm Smart Configurator
+Final Technical Requirement Document (Integrated Version)
 
-## 1. 核心數據源 (Strict Data Sources)
+1. Data Architecture (Strict Source Control)
+1.1 Authorised Data Sources (Non-negotiable)
 
-**警告：禁止使用任何非下列來源之產品資訊。**
+All system logic MUST strictly rely on the following sources.
+No inferred, estimated, or external data is allowed.
 
-* **Google Sheet ID:** `1CP0xxEZGIOr7Se-aGzkgrDli774U1FkXNhs7GeYiqx0`
-  * **分頁 [Luminaires]:** `S10_Magnetic_lamp` (擷取 Model, Price, Power, SpecsData, Photo)
-  * **分頁 [Tracks & Parts]:** `S10_Track&accessory` (擷取軌道與所有接頭、電源配件)
-* **圖片資料夾:** `1ZneJLRk2h8Mhg4-pRhplx5rqg_jFNqgS`
-  * API 格式: `https://drive.google.com/thumbnail?id=[ID]&sz=w1000`
+Google Sheet ID
+1CP0xxEZGIOr7Se-aGzkgrDli774U1FkXNhs7GeYiqx0
 
-## 2. 產品配置邏輯 (ACO 10mm System Logic)
+1.2 Data Mapping
+Sheet: S10_Magnetic_lamp
 
-系統需模擬專家思維，將型錄中的安裝規範轉換為自動化規則：
+Used for all luminaire-related logic.
 
-### 第一階段：安裝基礎 (Mounting Selection)
+Field Usage
+Model Product identification
+Price BOM calculation
+Power (F column) Mandatory numeric conversion for electrical calculation
+Specifications Used for UI spec modal (ⓘ)
+Photo Product card display
 
-* **Surface (明裝) / Pendant (吊裝):** 鎖定 `G-TL-A` 系列軌道。
-* **Trimless (批灰/無邊框):** 鎖定 `G-TL-D` 系列軌道。
-* **Recessed (嵌入式):** 鎖定 `G-TL-B` 或 `G-TL-C` 系列軌道。
+Critical Rule
 
-### 第二階段：拓樸佈局 (Topology Logic)
+Power must be parsed as numeric
+This is the only valid input for load calculation
+Sheet: S10_Track&accessory
 
-* **直線 (Straight):** 無轉角配件。
-* **L-Shape:** 需自動配對 1 組物理轉角與 1 組導電模組。
-* **T-Shape / Rectangle:** 需強制啟動 **Polarity Changer (極性轉換器)** 邏輯，防止相序短路（依據 ERCO 規劃準則）。
+Used for ALL non-luminaire components:
 
-### 第三階段：電力運算 (Electrical Load Balancing)
+Tracks (Profiles)
+Connectors
+Power Supply Units (PSU)
+Mounting Accessories
+End Caps
+Suspension Kits
+1.3 Image Loading Standard
+<https://drive.google.com/thumbnail?id=[ID]&sz=w1000>
 
-* **數據抓取:** 必須讀取 `S10_Magnetic_lamp` 的 **F 欄位 (Power)**。
-* **計算公式:** `Total Load = Sum(Lights Power)`.
-* **安全餘裕:** `Driver Capacity Required = Total Load + Max_Single_Light_Wattage`.
-* **自動配電:** 根據總瓦數自動從 `S10_Track&accessory` 挑選合適的 48V Power Supply (如 100W 或 200W)。
+Fallback rule:
 
-## 3. 自動化 BOM 生成矩陣 (Auto-Generation Matrix)
+If image fails → show grey placeholder
+Broken image icons are strictly forbidden
+2. System Logic (Expert Rule Engine)
+2.1 Stage 1 — Mounting Selection
 
-當使用者完成「場景描述」，系統需自動完成下列零件清單：
+System must enforce model prefix filtering:
 
-1. **Profiles:** `Total Metres / 2` (向上取整) 支 2M 軌道。
-2. **Mains Feed:** 自動加入 1 個 `Live End / Power Feed Connector` (-ZJDY)。
-3. **Mechanical Connectors:** `軌道數量 - 1 - 轉角數量` = 所需直線拼接件數量。
-4. **End Caps:** 固定加入 2 個 `End Plate / Cap` (-SM)。
-5. **Mounting Hardware:** * 若為 `Surface`: 自動按長度配比加入 `Fixing Clips` (-MZKK)。
-    * 若為 `Pendant`: 自動按長度與轉角點加入 `Suspension Kits`。
+Mounting Type Allowed Models
+Surface / Pendant G-TL-A
+Recessed G-TL-B, G-TL-C
+Trimless G-TL-D
 
-## 4. UI/UX 規範 (UK English Only)
+Rule
 
-* **介面語言:** 嚴格使用英式英文 (e.g., *Metres*, *Luminaires*, *Synchronising* )。
-* **響應式佈局:** 電腦端需呈現「左側配置、右側即時 BOM」之雙欄佈局；手機端為單欄引導。
-* **資訊透明:** 燈具卡片必須包含規格按鈕 (ⓘ)，點擊顯示 `SpecsData` 中的 Size, CRI, Voltage 等資訊。
+Mixing track types is NOT allowed
+2.2 Stage 2 — Topology Logic
+Layout Type Required Logic
+Straight No corner components
+L-Shape 1 Mechanical Corner + 1 Electrical Connector
+T-Shape Must include Polarity Changer
+Rectangle Must include Polarity Changer
 
-## 5. 輸出安全 (Poka-yoke)
+Critical Safety Constraint
 
-* **禁止空單:** 未加入燈具時禁止導出。
-* **超載阻斷:** 若總瓦數超過現有可用驅動器上限，需顯示紅色警告並阻止下一步。
-* **PDF 規格:** 導出之 PDF 需包含品牌 Logo、產品縮圖、分類小計、以及有效期聲明。
+T / Rectangle layouts MUST trigger polarity logic
+→ Prevent phase short-circuit risk
+2.3 Stage 3 — Electrical Load Engine
+Core Formula
+
+Total Load:
+
+Total Load = Sum(All Luminaire Power)
+
+Safety Margin (N+1 Rule):
+
+Required Capacity = Total Load + Max(Single Luminaire Power)
+PSU Auto Selection Logic
+Condition Action
+≤100W Select 100W PSU
+100–200W Select 200W PSU
+>200W Auto stack PSU units
+Overload Protection
+If required capacity exceeds system capability:
+Show RED warning
+Block progression
+1. Auto BOM Generation Engine
+
+System must auto-generate full Bill of Materials.
+
+3.1 Track Profiles
+Quantity = CEILING(Total Metres / 2)
+
+(2m per track)
+
+3.2 Mandatory Components
+Component Rule
+Power Feed Always add 1 × Live End (-ZJDY)
+End Caps Always add 2 × (-SM)
+3.3 Connectors
+Straight Connectors = Track Count - 1 - Corner Count
+3.4 Mounting Hardware
+Surface
+Add Fixing Clips (-MZKK)
+Density proportional to length
+Pendant
+
+Rules:
+
+Base suspension allocation by length
+Additional suspension required at:
+Every corner
+Every junction (L / T / X)
+3.5 Topology Safety Injection
+Condition Mandatory Addition
+T / Rectangle Polarity Changer
+4. UX / UI Specification (UK Standard)
+4.1 Language
+
+Strict British English:
+
+Metres
+Luminaires
+Synchronising
+Honoured
+4.2 Layout Behaviour
+Desktop
+Left (65%) → Configuration Wizard
+Right (35%) → Sticky BOM + Power Summary
+Mobile
+Single column flow
+BOM hidden in bottom drawer or final step
+4.3 Product Cards
+
+Each luminaire must include:
+
+Image
+Model
+Price
+Add button
+ⓘ Spec button
+4.4 Spec Modal (ⓘ)
+
+Must display:
+
+Size
+CRI
+Voltage
+Colour Temperature
+Any other available spec fields
+5. Safety & Poka-Yoke System
+5.1 Empty State Protection
+Cannot export without luminaires
+5.2 Electrical Protection
+Overload → hard stop + red warning
+5.3 Structural Protection
+Pendant systems must enforce:
+Additional suspension at stress points
+5.4 Data Integrity
+Only sheet data allowed
+No fallback assumptions
+6. Output System (PDF Export)
+6.1 Layout
+A4 Landscape
+Clean table format
+Navigation removed
+6.2 Content Requirements
+
+Must include:
+
+Brand Logo
+Product thumbnails
+Categorised BOM sections
+Total wattage summary
+PSU configuration
+Validity disclaimer
+6.3 Visual Structure
+
+Sections:
+
+Luminaires
+Tracks
+Connectors
+Power Supply
+Accessories
+7. System Behaviour Summary (Core Principles)
+
+This configurator must behave like:
+
+A lighting engineer, not a shopping cart
+
+Key characteristics:
+
+Rule-driven (not user guesswork)
+Error-preventing (not error-reporting)
+Auto-completing (not requiring manual assembly)
+Electrically safe by default
