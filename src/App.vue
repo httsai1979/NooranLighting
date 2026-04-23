@@ -190,12 +190,16 @@ const calculateBOM = computed<BOMItem[]>(() => {
 
   if (totalLoad > 0) {
     const drivers = data.value.accessories
-      .filter(a => a.category.toLowerCase().includes('driver') || a.category.toLowerCase().includes('power supply'))
-      .sort((a,b) => (parseInt(b.model.match(/\d+/)?.[0] || '0')) - (parseInt(a.model.match(/\d+/)?.[0] || '0')))
+      .filter(a => (a.category || '').toString().toLowerCase().includes('driver') || (a.category || '').toString().toLowerCase().includes('power supply'))
+      .sort((a,b) => {
+        const capB = parseInt((b.model || '').match(/\d+/)?.[0] || '0')
+        const capA = parseInt((a.model || '').match(/\d+/)?.[0] || '0')
+        return capB - capA
+      })
     
     if (drivers.length) {
       const bestDriver = drivers[0]
-      const capacity = parseInt(bestDriver.model.match(/\d+/)?.[0] || '100')
+      const capacity = parseInt((bestDriver.model || '').match(/\d+/)?.[0] || '100')
       
       // Calculate how many drivers are needed to meet "Required Capacity"
       const driverQty = Math.ceil(requiredCapacity / (capacity * 0.9)) // Using 90% as usable buffer
@@ -219,10 +223,10 @@ const totalLoad = computed(() => config.value.selectedLuminaires.reduce((a, c) =
 const maxSingleWatt = computed(() => config.value.selectedLuminaires.length > 0 ? Math.max(...config.value.selectedLuminaires.map(s => s.item.power)) : 0)
 const requiredCapacity = computed(() => totalLoad.value + maxSingleWatt.value)
 const maxPossibleDriverCap = computed(() => {
-  const drivers = data.value.accessories.filter(a => a.category.toLowerCase().includes('driver') || a.category.toLowerCase().includes('power supply'))
+  const drivers = data.value.accessories.filter(a => (a.category || '').toString().toLowerCase().includes('driver') || (a.category || '').toString().toLowerCase().includes('power supply'))
   if (drivers.length === 0) return 200 // Default fallback
   const caps = drivers.map(d => {
-    const m = d.model.match(/\d+/)
+    const m = (d.model || '').match(/\d+/)
     return m ? parseInt(m[0]) : 0
   })
   return Math.max(...caps, 100)
@@ -244,7 +248,15 @@ const nextStep = () => {
 }
 const prevStep = () => step.value = Math.max(step.value - 1, 0)
 const handleImageError = (e: any) => {
-  e.target.src = 'https://via.placeholder.com/400x400/18181b/ffffff?text=Product+Image'
+  // Fallback if image service fails
+  e.target.style.display = 'none' 
+  const container = e.target.parentElement
+  if (container) {
+    container.classList.add('flex', 'items-center', 'justify-center', 'bg-zinc-900')
+    const icon = document.createElement('div')
+    icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-700"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>'
+    container.appendChild(icon.firstChild!)
+  }
 }
 
 const updateLuminaire = (lamp: Luminaire, delta: number) => {
